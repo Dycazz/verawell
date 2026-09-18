@@ -95,8 +95,8 @@ app/                  Expo Router routes
   guest/              guest tabs (guarded)
   staff/              console (guarded, responsive nav)
 src/
-  theme/              tokens, Fraunces + IBM Plex Sans, light + dark
-  components/         Screen, Card, Button, ListRow, Conversation, CrisisBar…
+  theme/              tokens, system type ramp, light + dark
+  components/         Screen, Group, Row, Button, Segmented, Conversation, CrisisBar…
   data/               types, seed, backend adapter, reactive store
   safety/             session + auto-lock, privacy prefs, quick exit
   lib/                phone/URL handoff, date and time formatting
@@ -111,11 +111,34 @@ same interface and change `const backend: Backend = new LocalBackend()` in
 What `LocalBackend` persists stands in for *server* state, not a device cache of
 guest data — that distinction is what keeps the privacy promise above intact.
 
-Design direction is warm and quiet on purpose: Fraunces for headings, IBM Plex
-Sans for everything that must stay legible under stress, 52pt minimum touch
-targets, and crisis red spent on exactly one control so it never stops meaning
-emergency. Dark mode is first-class — this app gets used at night, in shared
-rooms.
+## Design
+
+The app is built to feel like part of the operating system rather than like an
+app with opinions. Someone opening it may be in a bad moment, on a phone they
+are not sure is private; familiarity is worth more here than personality.
+
+That means platform conventions rather than a house style:
+
+- **System typeface** at the iOS Dynamic Type sizes. No bundled webfont, so text
+  scales with the user's accessibility settings instead of ignoring them.
+- **Inset grouped lists** — the iOS Settings structure — instead of a page of
+  drop-shadowed cards. Containers read as raised because their fill differs from
+  the grouped background, which is why native lists stay calm at density.
+- **iOS system greys** and one institutional accent, so that **red belongs to the
+  crisis bar alone** and never stops meaning emergency.
+- **Small saturated icon chips** at Settings scale (29pt, white glyph) where they
+  help scanning, not large pastel ones as decoration.
+- Dark mode is true black and first-class — this app gets used at night in shared
+  rooms.
+
+The references it was built against: **iOS Settings and Health** for list
+structure and the status summary, **Watch Duty** for a persistent incident bar
+that reads as system chrome, and **Signal** for the plain, dense, trust-by-
+legibility posture. The staff console borrows from desk tools instead — denser
+rows, a horizontal nav, muted chrome — because advocates use it at a keyboard.
+
+The one earned deviation is the crisis bar: full-bleed, square-cornered, and
+pinned inside the navigator so it survives every tab change.
 
 ## Open questions this build takes a position on
 

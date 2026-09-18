@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Springy, Badge, Conversation } from '../../src/components';
-import { Text, useTheme, radius, space, fonts } from '../../src/theme';
+import { Text, useTheme, space } from '../../src/theme';
 import { useBackend, useShelter } from '../../src/data';
 import { relativeTime } from '../../src/lib/contact';
 import { useSession } from '../../src/safety';
@@ -29,9 +29,9 @@ export default function StaffThread() {
   if (!thread) {
     return (
       <View style={[styles.missing, { backgroundColor: c.bg, paddingTop: insets.top + space['3xl'] }]}>
-        <Text variant="heading">Conversation not found</Text>
-        <Springy onPress={() => router.replace('/staff/inbox')} style={{ marginTop: space.lg }}>
-          <Text variant="callout" tone="primary">
+        <Text variant="title3">Conversation not found</Text>
+        <Springy onPress={() => router.replace('/staff/inbox')} scaleTo={1} style={{ marginTop: space.base }}>
+          <Text variant="body" style={{ color: c.tint }}>
             Back to inbox
           </Text>
         </Springy>
@@ -44,22 +44,30 @@ export default function StaffThread() {
       style={{ flex: 1, backgroundColor: c.bg }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={[styles.header, { paddingTop: insets.top + space.md, borderBottomColor: c.line }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top, backgroundColor: c.chrome, borderBottomColor: c.separator },
+        ]}
+      >
         <Springy
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/staff/inbox'))}
-          scaleTo={0.9}
+          scaleTo={1}
           accessibilityRole="button"
           accessibilityLabel="Back to inbox"
-          style={StyleSheet.flatten([styles.backBtn, { backgroundColor: c.surfaceAlt }])}
+          style={styles.back}
         >
-          <Ionicons name="chevron-back" size={22} color={c.ink} />
+          <Ionicons name="chevron-back" size={26} color={c.tint} style={{ marginLeft: -6 }} />
+          <Text variant="body" style={{ color: c.tint }}>
+            Inbox
+          </Text>
         </Springy>
 
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: fonts.bodySemi, fontSize: 15, color: c.ink, letterSpacing: 0.5 }}>
+          <Text variant="headline" numberOfLines={1}>
             {thread.guestCode}
           </Text>
-          <Text variant="caption" tone="faint">
+          <Text variant="caption" tone="secondary" numberOfLines={1}>
             {thread.topic} · started {relativeTime(thread.createdAt)}
           </Text>
         </View>
@@ -82,11 +90,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.md,
-    paddingHorizontal: space.lg,
-    paddingBottom: space.md,
-    borderBottomWidth: StyleSheet.hairlineWidth * 2,
+    gap: space.sm,
+    paddingHorizontal: space.sm,
+    paddingBottom: space.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  backBtn: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  missing: { flex: 1, alignItems: 'center', paddingHorizontal: space.lg },
+  back: { height: 44, flexDirection: 'row', alignItems: 'center', paddingRight: space.xs },
+  missing: { flex: 1, alignItems: 'center', paddingHorizontal: space.base },
 });

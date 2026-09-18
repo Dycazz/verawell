@@ -1,20 +1,19 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
-import { Screen, Card, Stagger, SectionHeader, Badge } from '../../src/components';
-import { Text, useTheme, radius, space } from '../../src/theme';
+import { Screen, Group, Badge } from '../../src/components';
+import { Text, useTheme, space, LAYOUT } from '../../src/theme';
 import { useCalendarByDay, todayISO } from '../../src/data';
 import type { CalendarEntry, EventKind } from '../../src/data';
 import { formatTime, formatDayLabel } from '../../src/lib/contact';
 import { QuickExit } from '../../src/safety';
 
-const KIND: Record<EventKind, { icon: keyof typeof Ionicons.glyphMap; tone: 'primary' | 'clay' | 'caution' | 'neutral'; label: string }> = {
-  meal: { icon: 'restaurant-outline', tone: 'clay', label: 'Meal' },
-  group: { icon: 'people-outline', tone: 'primary', label: 'Group' },
-  curfew: { icon: 'moon-outline', tone: 'caution', label: 'Quiet hours' },
-  appointment: { icon: 'calendar-outline', tone: 'primary', label: 'Drop-in' },
-  chore: { icon: 'sparkles-outline', tone: 'neutral', label: 'House' },
+const KIND_LABEL: Record<EventKind, string> = {
+  meal: 'Meal',
+  group: 'Group',
+  curfew: 'Quiet hours',
+  appointment: 'Drop-in',
+  chore: 'House',
 };
 
 export default function Schedule() {
@@ -24,102 +23,75 @@ export default function Schedule() {
 
   return (
     <Screen
-      eyebrow="House calendar"
       title="Schedule"
-      subtitle="Meals, groups, and quiet hours. Times can shift — an advocate will post a notice if they do."
+      subtitle="Times can shift — an advocate will post a notice if they do."
       headerRight={<QuickExit />}
     >
       {upcoming.length === 0 ? (
-        <Card tone="alt" flat>
-          <Text variant="callout" tone="muted">
+        <Group padded>
+          <Text variant="body" tone="secondary">
             Nothing scheduled yet.
           </Text>
-        </Card>
+        </Group>
       ) : (
-        upcoming.map((d, i) => (
-          <Stagger key={d.day} index={i + 1} style={{ marginBottom: space.xl }}>
-            <SectionHeader
-              title={formatDayLabel(d.day)}
-              action={d.day === today ? <Badge label="Today" tone="primary" dot /> : undefined}
-            />
-            <Card padded={false}>
-              {d.entries.map((e, idx) => (
-                <EventRow key={e.id} entry={e} last={idx === d.entries.length - 1} />
+        upcoming.map((d) => (
+          <View key={d.day} style={{ marginBottom: space['2xl'] }}>
+            <Group header={formatDayLabel(d.day)}>
+              {d.entries.map((e) => (
+                <EventRow key={e.id} entry={e} today={d.day === today} />
               ))}
-            </Card>
-          </Stagger>
+            </Group>
+          </View>
         ))
       )}
     </Screen>
   );
 }
 
-function EventRow({ entry, last }: { entry: CalendarEntry; last: boolean }) {
-  const { c } = useTheme();
-  const k = KIND[entry.kind];
-  const tint = { primary: c.primary, clay: c.clay, caution: c.caution, neutral: c.inkMuted }[k.tone];
-  const tintSoft = { primary: c.primarySoft, clay: c.claySoft, caution: c.cautionSoft, neutral: c.surfaceAlt }[k.tone];
+/** Time in a fixed leading column, the way a native calendar day view reads. */
+function EventRow({ entry, today }: { entry: CalendarEntry; today: boolean }) {
+  const now = new Date();
+  const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const past = today && (entry.endTime ?? entry.time) < hhmm;
 
   return (
-    <View
-      style={[
-        styles.row,
-        !last && { borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: c.line },
-      ]}
-    >
+    <View style={[styles.row, past && { opacity: 0.45 }]}>
       <View style={styles.time}>
-        <Text variant="bodyStrong">{formatTime(entry.time)}</Text>
+        <Text variant="subhead" strong tabular>
+          {formatTime(entry.time)}
+        </Text>
         {entry.endTime ? (
-          <Text variant="caption" tone="faint">
-            to {formatTime(entry.endTime)}
+          <Text variant="caption" tone="tertiary" tabular>
+            {formatTime(entry.endTime)}
           </Text>
         ) : null}
       </View>
 
-      {/* Rail: keeps the eye on a single vertical line down the day. */}
-      <View style={styles.rail}>
-        <View style={[styles.dot, { backgroundColor: tint }]} />
-        {!last ? <View style={[styles.railLine, { backgroundColor: c.line }]} /> : null}
-      </View>
-
-      <View style={{ flex: 1, paddingBottom: last ? 0 : space.xs }}>
-        <Text variant="bodyStrong">{entry.title}</Text>
-        <View style={styles.meta}>
-          <View style={[styles.kindChip, { backgroundColor: tintSoft }]}>
-            <Ionicons name={k.icon} size={12} color={tint} />
-            <Text variant="caption" style={{ color: tint, fontSize: 11 }}>
-              {k.label}
-            </Text>
-          </View>
-          {entry.location ? (
-            <Text variant="caption" tone="muted">
-              {entry.location}
-            </Text>
-          ) : null}
-        </View>
+      <View style={{ flex: 1 }}>
+        <Text variant="body">{entry.title}</Text>
+        <Text variant="footnote" tone="secondary" style={{ marginTop: 1 }}>
+          {[KIND_LABEL[entry.kind], entry.location].filter(Boolean).join(' · ')}
+        </Text>
         {entry.note ? (
-          <Text variant="caption" tone="muted" style={{ marginTop: 4 }}>
+          <Text variant="footnote" tone="tertiary" style={{ marginTop: 2 }}>
             {entry.note}
           </Text>
         ) : null}
       </View>
+
+      {entry.kind === 'curfew' ? <Badge label="Quiet" tone="grey" /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: space.md, paddingHorizontal: space.base, paddingVertical: space.md },
-  time: { width: 74 },
-  rail: { width: 12, alignItems: 'center', paddingTop: 6 },
-  dot: { width: 9, height: 9, borderRadius: 9 },
-  railLine: { width: 2, flex: 1, marginTop: 4, borderRadius: 2 },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: 5, flexWrap: 'wrap' },
-  kindChip: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
+    gap: space.md,
+    minHeight: LAYOUT.rowTall,
+    paddingHorizontal: LAYOUT.margin,
+    paddingVertical: space.sm,
   },
+  time: { width: 62 },
 });

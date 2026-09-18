@@ -3,16 +3,15 @@ import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Springy } from '../components/Pressable';
-import { Text, useTheme, radius, space } from '../theme';
+import { Text, useTheme, space } from '../theme';
 import { useSession } from './session';
 
 /**
  * Quick exit.
  *
- * Standard pattern in apps built for people who may be watched: one tap drops the
- * session and replaces the screen with something unremarkable. It is styled to be
- * findable without being conspicuous — a red panic button on screen is itself a
- * tell that this is not an ordinary app.
+ * Standard pattern for apps used by people who may be watched: one tap drops the
+ * session and replaces the screen with something unremarkable. Styled as an
+ * ordinary nav bar action — a red panic button would itself be a tell.
  */
 export function QuickExit({ compact }: { compact?: boolean }) {
   const { c } = useTheme();
@@ -24,20 +23,16 @@ export function QuickExit({ compact }: { compact?: boolean }) {
         signOut('quick-exit');
         router.replace('/cover');
       }}
-      haptic="none"
-      scaleTo={0.92}
+      scaleTo={1}
       accessibilityRole="button"
       accessibilityLabel="Quick exit"
       accessibilityHint="Signs you out immediately and leaves this app"
-      style={StyleSheet.flatten([
-        styles.btn,
-        { backgroundColor: c.surfaceAlt, borderColor: c.line, paddingHorizontal: compact ? 12 : space.base },
-      ])}
+      style={styles.btn}
     >
       <View style={styles.inner}>
-        <Ionicons name="exit-outline" size={17} color={c.inkMuted} />
+        <Ionicons name="exit-outline" size={18} color={c.tint} />
         {!compact && (
-          <Text variant="label" tone="muted">
+          <Text variant="body" style={{ color: c.tint }}>
             Exit
           </Text>
         )}
@@ -47,6 +42,6 @@ export function QuickExit({ compact }: { compact?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  btn: { height: 40, borderRadius: radius.pill, borderWidth: 1, justifyContent: 'center' },
-  inner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  btn: { height: 44, justifyContent: 'center', paddingHorizontal: space.sm },
+  inner: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });

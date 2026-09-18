@@ -4,7 +4,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useTheme, fonts } from '../../src/theme';
+import { useTheme } from '../../src/theme';
 import { useSession } from '../../src/safety';
 import { useThreadsForCode } from '../../src/data';
 
@@ -14,68 +14,48 @@ export default function GuestLayout() {
   const { session } = useSession();
   const threads = useThreadsForCode(session?.role === 'guest' ? session.code : null);
 
-  // The guard lives here rather than in each screen, so an expired session drops
-  // the whole tab group at once — including any screen already mounted behind it.
+  // The guard lives here so an expired session drops the whole tab group at
+  // once, including any screen already mounted behind it.
   if (!session || session.role !== 'guest') {
     return <Redirect href="/guest-login" />;
   }
 
   const unread = threads.reduce((n, t) => n + t.unreadForGuest, 0);
 
+  const tab = (name: string, title: string, on: keyof typeof Ionicons.glyphMap, off: keyof typeof Ionicons.glyphMap, badge?: number) => (
+    <Tabs.Screen
+      name={name}
+      options={{
+        title,
+        tabBarBadge: badge,
+        tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? on : off} size={25} color={color} />,
+      }}
+    />
+  );
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: c.primary,
-        tabBarInactiveTintColor: c.inkFaint,
+        tabBarActiveTintColor: c.tint,
+        tabBarInactiveTintColor: c.labelSecondary,
         tabBarStyle: {
-          height: 60 + insets.bottom,
+          height: 52 + insets.bottom,
           paddingBottom: insets.bottom,
-          paddingTop: 6,
-          backgroundColor: c.surface,
-          borderTopColor: c.line,
-          borderTopWidth: StyleSheet.hairlineWidth * 2,
+          paddingTop: 2,
+          backgroundColor: c.chrome,
+          borderTopColor: c.separator,
+          borderTopWidth: StyleSheet.hairlineWidth,
         },
-        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11, marginTop: 2 },
-        tabBarBadgeStyle: { backgroundColor: c.clay, color: c.onClay, fontFamily: fonts.bodySemi, fontSize: 11 },
+        tabBarLabelStyle: { fontSize: 10, marginTop: 0, marginBottom: 2 },
+        tabBarBadgeStyle: { backgroundColor: c.crisis, fontSize: 11 },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Today',
-          tabBarIcon: ({ color, size }) => <Ionicons name="sunny-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="safety"
-        options={{
-          title: 'Safety',
-          tabBarIcon: ({ color, size }) => <Ionicons name="shield-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="schedule"
-        options={{
-          title: 'Schedule',
-          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="advocate"
-        options={{
-          title: 'Advocate',
-          tabBarBadge: unread > 0 ? unread : undefined,
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="house"
-        options={{
-          title: 'House',
-          tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
-        }}
-      />
+      {tab('index', 'Today', 'today', 'today-outline')}
+      {tab('safety', 'Safety', 'shield-checkmark', 'shield-outline')}
+      {tab('schedule', 'Schedule', 'calendar', 'calendar-outline')}
+      {tab('advocate', 'Advocate', 'chatbubble', 'chatbubble-outline', unread > 0 ? unread : undefined)}
+      {tab('house', 'House', 'book', 'book-outline')}
     </Tabs>
   );
 }

@@ -1,48 +1,40 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { Text, useTheme, radius, space } from '../theme';
+import { Text, useTheme, radius } from '../theme';
 
-type Tone = 'primary' | 'clay' | 'crisis' | 'onShift' | 'caution' | 'neutral';
+type Tone = 'tint' | 'crisis' | 'positive' | 'warn' | 'grey';
 
-export function Badge({ label, tone = 'primary', dot }: { label: string; tone?: Tone; dot?: boolean }) {
+/** Small count or status pill, sized like a native badge rather than a chip. */
+export function Badge({ label, tone = 'tint' }: { label: string; tone?: Tone }) {
   const { c } = useTheme();
 
-  const fg = {
-    primary: c.primary,
-    clay: c.clay,
-    crisis: c.crisis,
-    onShift: c.onShift,
-    caution: c.caution,
-    neutral: c.inkMuted,
-  }[tone];
+  const fg = { tint: c.tint, crisis: c.crisis, positive: c.positive, warn: c.warn, grey: c.labelSecondary }[tone];
   const bg = {
-    primary: c.primarySoft,
-    clay: c.claySoft,
-    crisis: c.crisisSoft,
-    onShift: c.onShiftSoft,
-    caution: c.cautionSoft,
-    neutral: c.surfaceAlt,
+    tint: c.tintFill,
+    crisis: c.crisisFill,
+    positive: c.positiveFill,
+    warn: c.warnFill,
+    grey: c.fill,
   }[tone];
 
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
-      {dot ? <LiveDot color={fg} /> : null}
-      <Text variant="label" style={{ color: fg }}>
+      <Text variant="caption" strong style={{ color: fg }}>
         {label}
       </Text>
     </View>
   );
 }
 
-/** A slow breath, not a blink — signals "live" without demanding attention. */
-export function LiveDot({ color, size = 7 }: { color: string; size?: number }) {
+/** Slow breath, not a blink — the same idea as a recording indicator. */
+export function LiveDot({ color, size = 8 }: { color: string; size?: number }) {
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 1300, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 1300, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 1200, useNativeDriver: true }),
       ]),
     );
     loop.start();
@@ -56,20 +48,12 @@ export function LiveDot({ color, size = 7 }: { color: string; size?: number }) {
         height: size,
         borderRadius: size,
         backgroundColor: color,
-        opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] }),
+        opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }),
       }}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: space.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    alignSelf: 'flex-start',
-  },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, alignSelf: 'flex-start' },
 });

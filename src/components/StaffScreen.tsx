@@ -2,19 +2,14 @@ import React from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Screen } from './Screen';
 
-/**
- * Console pages share one width and one inset rule, so they stay aligned with the
- * nav bar above them and do not each re-derive the desk-vs-phone decision.
- */
+/** Console pages share one width and one inset rule so they line up with the nav bar. */
 export function StaffScreen({
   children,
-  eyebrow,
   title,
   subtitle,
   headerRight,
 }: {
   children: React.ReactNode;
-  eyebrow?: string;
   title: string;
   subtitle?: string;
   headerRight?: React.ReactNode;
@@ -24,11 +19,10 @@ export function StaffScreen({
 
   return (
     <Screen
-      eyebrow={eyebrow}
       title={title}
       subtitle={subtitle}
       headerRight={headerRight}
-      maxWidth={wide ? 1180 : 720}
+      maxWidth={wide ? 1120 : 700}
       topInset={!wide}
     >
       {children}

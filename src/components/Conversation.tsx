@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Springy } from './Pressable';
-import { Text, useTheme, radius, space, HIT, fonts } from '../theme';
+import { Text, useTheme, radius, space, LAYOUT, weight } from '../theme';
 import { relativeTime } from '../lib/contact';
 import type { ThreadMessage } from '../data';
 
@@ -48,7 +48,7 @@ export function Conversation({
         ))}
 
         {footnote ? (
-          <Text variant="caption" tone="faint" center style={{ marginTop: space.lg }}>
+          <Text variant="footnote" tone="secondary" center style={{ marginTop: space.lg }}>
             {footnote}
           </Text>
         ) : null}
@@ -57,20 +57,20 @@ export function Conversation({
       <View
         style={[
           styles.composer,
-          { paddingBottom: insets.bottom || space.md, backgroundColor: c.surface, borderTopColor: c.line },
+          { paddingBottom: insets.bottom || space.md, backgroundColor: c.chrome, borderTopColor: c.separator },
         ]}
       >
-        <View style={[styles.input, { backgroundColor: c.bg, borderColor: c.line }]}>
+        <View style={[styles.input, { backgroundColor: c.fill }]}>
           <TextInput
             value={draft}
             onChangeText={setDraft}
             placeholder={placeholder}
-            placeholderTextColor={c.inkFaint}
+            placeholderTextColor={c.labelTertiary}
             multiline
             style={{
               flex: 1,
-              color: c.ink,
-              fontFamily: fonts.body,
+              color: c.label,
+              ...weight('400'),
               fontSize: 16,
               lineHeight: 22,
               maxHeight: 110,
@@ -87,10 +87,10 @@ export function Conversation({
           accessibilityLabel="Send message"
           style={StyleSheet.flatten([
             styles.send,
-            { backgroundColor: draft.trim() ? c.primary : c.surfaceAlt },
+            { backgroundColor: draft.trim() ? c.tint : c.fillStrong },
           ])}
         >
-          <Ionicons name="arrow-up" size={20} color={draft.trim() ? c.onPrimary : c.inkFaint} />
+          <Ionicons name="arrow-up" size={19} color={draft.trim() ? c.onTint : c.labelTertiary} />
         </Springy>
       </View>
     </>
@@ -104,7 +104,7 @@ function Bubble({ message, mine }: { message: ThreadMessage; mine: boolean }) {
   return (
     <View style={{ alignItems: mine ? 'flex-end' : 'flex-start' }}>
       {!mine ? (
-        <Text variant="label" caps tone="faint" style={{ marginBottom: 5, marginLeft: 4 }}>
+        <Text variant="caption" tone="secondary" style={{ marginBottom: 4, marginLeft: 6 }}>
           {author}
         </Text>
       ) : null}
@@ -113,21 +113,16 @@ function Bubble({ message, mine }: { message: ThreadMessage; mine: boolean }) {
         style={[
           styles.bubble,
           mine
-            ? { backgroundColor: c.primary, borderBottomRightRadius: radius.sm }
-            : {
-                backgroundColor: c.surface,
-                borderColor: c.line,
-                borderWidth: StyleSheet.hairlineWidth * 2,
-                borderBottomLeftRadius: radius.sm,
-              },
+            ? { backgroundColor: c.tint }
+            : { backgroundColor: c.fill },
         ]}
       >
-        <Text variant="callout" style={{ color: mine ? c.onPrimary : c.ink }}>
+        <Text variant="body" style={{ color: mine ? c.onTint : c.label }}>
           {message.body}
         </Text>
       </View>
 
-      <Text variant="caption" tone="faint" style={{ marginTop: 4, marginHorizontal: 4, fontSize: 11 }}>
+      <Text variant="caption2" tone="tertiary" style={{ marginTop: 3, marginHorizontal: 6 }}>
         {relativeTime(message.createdAt)}
       </Text>
     </View>
@@ -135,23 +130,22 @@ function Bubble({ message, mine }: { message: ThreadMessage; mine: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  bubble: { maxWidth: '86%', paddingHorizontal: space.base, paddingVertical: space.md, borderRadius: radius.lg },
+  bubble: { maxWidth: '78%', paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18 },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: space.sm,
     paddingHorizontal: space.base,
     paddingTop: space.md,
-    borderTopWidth: StyleSheet.hairlineWidth * 2,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   input: {
     flex: 1,
-    minHeight: HIT - 4,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    paddingHorizontal: space.base,
+    minHeight: 40,
+    borderRadius: 18,
+    paddingHorizontal: space.md,
     paddingVertical: space.md,
     justifyContent: 'center',
   },
-  send: { width: 46, height: 46, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  send: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
 });

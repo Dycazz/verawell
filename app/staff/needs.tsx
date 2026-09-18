@@ -2,25 +2,25 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { StaffScreen, Card, Button, Field, Badge, Stagger, Springy, SectionHeader } from '../../src/components';
-import { Text, useTheme, radius, space } from '../../src/theme';
+import { StaffScreen, Group, Row, Button, Field, Segmented, Springy } from '../../src/components';
+import { Text, useTheme, space } from '../../src/theme';
 import { useBackend, useNeeds } from '../../src/data';
 import type { NeedItem, Urgency } from '../../src/data';
 import { relativeTime } from '../../src/lib/contact';
 
-const URGENCIES: { key: Urgency; label: string; tone: 'clay' | 'primary' | 'onShift' }[] = [
-  { key: 'urgent', label: 'Needed now', tone: 'clay' },
-  { key: 'ongoing', label: 'Always welcome', tone: 'primary' },
-  { key: 'stocked', label: 'Well stocked', tone: 'onShift' },
+const URGENCIES: { value: Urgency; label: string }[] = [
+  { value: 'urgent', label: 'Needed now' },
+  { value: 'ongoing', label: 'Welcome' },
+  { value: 'stocked', label: 'Stocked' },
 ];
 
-const CATEGORIES: { key: NeedItem['category']; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: 'household', label: 'Household', icon: 'home-outline' },
-  { key: 'food', label: 'Food', icon: 'restaurant-outline' },
-  { key: 'hygiene', label: 'Hygiene', icon: 'water-outline' },
-  { key: 'kids', label: 'Kids', icon: 'happy-outline' },
-  { key: 'bedding', label: 'Bedding', icon: 'bed-outline' },
-  { key: 'other', label: 'Other', icon: 'cube-outline' },
+const CATEGORIES: { value: NeedItem['category']; label: string }[] = [
+  { value: 'household', label: 'Household' },
+  { value: 'food', label: 'Food' },
+  { value: 'hygiene', label: 'Hygiene' },
+  { value: 'kids', label: 'Kids' },
+  { value: 'bedding', label: 'Bedding' },
+  { value: 'other', label: 'Other' },
 ];
 
 export default function StaffNeeds() {
@@ -44,130 +44,102 @@ export default function StaffNeeds() {
     });
     setTitle('');
     setNote('');
-    setUrgency('urgent');
-    setCategory('household');
   }
 
   return (
-    <StaffScreen
-      eyebrow="Console"
-      title="Current needs"
-      subtitle="This list is what the public app shows. Changes appear there immediately."
-    >
+    <StaffScreen title="Current needs" subtitle="This list is what the public app shows.">
       <View style={styles.columns}>
         <View style={styles.colNarrow}>
-          <Stagger index={1}>
-            <SectionHeader title="Add an item" />
-            <Card>
-              <View style={{ gap: space.lg }}>
-                <Field label="Item" value={title} onChangeText={setTitle} placeholder="Twin sheet sets" />
-                <Field
-                  label="Note (optional)"
-                  value={note}
-                  onChangeText={setNote}
-                  placeholder="New or gently used"
-                />
+          <Group padded header="Add an item">
+            <View style={{ gap: space.md }}>
+              <Field label="Item" value={title} onChangeText={setTitle} placeholder="Twin sheet sets" />
+              <Field label="Note (optional)" value={note} onChangeText={setNote} placeholder="New or gently used" />
 
-                <View style={{ gap: space.sm }}>
-                  <Text variant="label" caps tone="faint">
-                    Priority
-                  </Text>
-                  <View style={styles.chips}>
-                    {URGENCIES.map((u) => (
-                      <Chip
-                        key={u.key}
-                        label={u.label}
-                        active={urgency === u.key}
-                        onPress={() => setUrgency(u.key)}
-                      />
-                    ))}
-                  </View>
-                </View>
-
-                <View style={{ gap: space.sm }}>
-                  <Text variant="label" caps tone="faint">
-                    Category
-                  </Text>
-                  <View style={styles.chips}>
-                    {CATEGORIES.map((cat) => (
-                      <Chip
-                        key={cat.key}
-                        label={cat.label}
-                        icon={cat.icon}
-                        active={category === cat.key}
-                        onPress={() => setCategory(cat.key)}
-                      />
-                    ))}
-                  </View>
-                </View>
-
-                <Button label="Add to the list" icon="add" full disabled={!title.trim()} onPress={add} />
+              <View>
+                <Text variant="footnote" tone="secondary" style={{ marginBottom: 6 }}>
+                  Priority
+                </Text>
+                <Segmented options={URGENCIES} value={urgency} onChange={setUrgency} />
               </View>
-            </Card>
-          </Stagger>
+
+              <View>
+                <Text variant="footnote" tone="secondary" style={{ marginBottom: 6 }}>
+                  Category
+                </Text>
+                {/* Six options is too many for a segmented control, so this uses
+                    the other native picker: a list with a checkmark on the
+                    selection. */}
+                <View style={[styles.picker, { backgroundColor: c.fill }]}>
+                  {CATEGORIES.map((cat) => (
+                    <Springy
+                      key={cat.value}
+                      onPress={() => setCategory(cat.value)}
+                      scaleTo={1}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: category === cat.value }}
+                      accessibilityLabel={cat.label}
+                      style={styles.pickerItem}
+                    >
+                      <Text variant="subhead" style={{ flex: 1 }}>
+                        {cat.label}
+                      </Text>
+                      {category === cat.value ? (
+                        <Ionicons name="checkmark" size={17} color={c.tint} />
+                      ) : null}
+                    </Springy>
+                  ))}
+                </View>
+              </View>
+
+              <Button label="Add to the list" full disabled={!title.trim()} onPress={add} />
+            </View>
+          </Group>
         </View>
 
         <View style={styles.col}>
-          {URGENCIES.map((u, i) => {
-            const items = needs[u.key];
+          {URGENCIES.map((u) => {
+            const items = needs[u.value];
             return (
-              <Stagger key={u.key} index={i + 2} style={{ marginBottom: space.xl }}>
-                <SectionHeader title={u.label} action={<Badge label={String(items.length)} tone={u.tone} />} />
-                {items.length === 0 ? (
-                  <Card tone="alt" flat>
-                    <Text variant="callout" tone="muted">
-                      Nothing here.
-                    </Text>
-                  </Card>
-                ) : (
-                  <Card padded={false}>
-                    {items.map((n, idx) => (
-                      <View
+              <View key={u.value} style={{ marginBottom: space['2xl'] }}>
+                <Group header={`${u.label} (${items.length})`}>
+                  {items.length === 0 ? (
+                    <Row title="Nothing here" accessory="none" />
+                  ) : (
+                    items.map((n) => (
+                      <Row
                         key={n.id}
-                        style={[
-                          styles.row,
-                          idx < items.length - 1 && {
-                            borderBottomWidth: StyleSheet.hairlineWidth * 2,
-                            borderBottomColor: c.line,
-                          },
-                        ]}
-                      >
-                        <View style={{ flex: 1 }}>
-                          <Text variant="bodyStrong">{n.title}</Text>
-                          {n.note ? (
-                            <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                              {n.note}
-                            </Text>
-                          ) : null}
-                          <Text variant="caption" tone="faint" style={{ marginTop: 3 }}>
-                            {CATEGORIES.find((cat) => cat.key === n.category)?.label} · {relativeTime(n.updatedAt)}
-                          </Text>
-                        </View>
-
-                        <Springy
-                          onPress={() => api.upsertNeed({ ...n, urgency: nextUrgency(n.urgency) })}
-                          scaleTo={0.88}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Change priority of ${n.title}`}
-                          style={StyleSheet.flatten([styles.iconBtn, { backgroundColor: c.surfaceAlt }])}
-                        >
-                          <Ionicons name="swap-vertical-outline" size={17} color={c.inkMuted} />
-                        </Springy>
-
-                        <Springy
-                          onPress={() => api.removeNeed(n.id)}
-                          scaleTo={0.88}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Remove ${n.title}`}
-                          style={StyleSheet.flatten([styles.iconBtn, { backgroundColor: c.surfaceAlt }])}
-                        >
-                          <Ionicons name="trash-outline" size={16} color={c.inkMuted} />
-                        </Springy>
-                      </View>
-                    ))}
-                  </Card>
-                )}
-              </Stagger>
+                        title={n.title}
+                        subtitle={[n.note, CATEGORIES.find((x) => x.value === n.category)?.label, relativeTime(n.updatedAt)]
+                          .filter(Boolean)
+                          .join(' · ')}
+                        accessory="none"
+                        right={
+                          <View style={{ flexDirection: 'row', gap: space.xs }}>
+                            <Springy
+                              onPress={() => api.upsertNeed({ ...n, urgency: next(n.urgency) })}
+                              scaleTo={0.9}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Change priority of ${n.title}`}
+                              style={styles.iconBtn}
+                            >
+                              <Ionicons name="swap-vertical" size={18} color={c.tint} />
+                            </Springy>
+                            <Springy
+                              onPress={() => api.removeNeed(n.id)}
+                              scaleTo={0.9}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Remove ${n.title}`}
+                              style={styles.iconBtn}
+                            >
+                              <Ionicons name="trash" size={17} color={c.crisis} />
+                            </Springy>
+                          </View>
+                        }
+                      />
+                    ))
+                  )}
+                </Group>
+              </View>
             );
           })}
         </View>
@@ -176,59 +148,17 @@ export default function StaffNeeds() {
   );
 }
 
-/** Cycles urgent → ongoing → stocked → urgent, so one control covers all three. */
-function nextUrgency(current: Urgency): Urgency {
+/** Cycles the three priorities, so one control covers all of them. */
+function next(current: Urgency): Urgency {
   const order: Urgency[] = ['urgent', 'ongoing', 'stocked'];
   return order[(order.indexOf(current) + 1) % order.length];
 }
 
-function Chip({
-  label,
-  icon,
-  active,
-  onPress,
-}: {
-  label: string;
-  icon?: keyof typeof Ionicons.glyphMap;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const { c } = useTheme();
-  return (
-    <Springy
-      onPress={onPress}
-      scaleTo={0.93}
-      haptic="none"
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      accessibilityLabel={label}
-      style={StyleSheet.flatten([
-        styles.chip,
-        { backgroundColor: active ? c.primary : c.surfaceAlt, borderColor: active ? c.primary : c.line },
-      ])}
-    >
-      {icon ? <Ionicons name={icon} size={13} color={active ? c.onPrimary : c.inkMuted} /> : null}
-      <Text variant="label" style={{ color: active ? c.onPrimary : c.inkMuted }}>
-        {label}
-      </Text>
-    </Springy>
-  );
-}
-
 const styles = StyleSheet.create({
   columns: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xl },
-  colNarrow: { flexGrow: 1, flexBasis: 320, minWidth: 280 },
-  col: { flexGrow: 2, flexBasis: 400, minWidth: 280 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.base },
-  iconBtn: { width: 34, height: 34, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: space.md,
-    height: 36,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-  },
+  colNarrow: { flexGrow: 1, flexBasis: 310, minWidth: 260 },
+  col: { flexGrow: 2, flexBasis: 380, minWidth: 260 },
+  iconBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+  picker: { borderRadius: 10, overflow: 'hidden' },
+  pickerItem: { flexDirection: 'row', alignItems: 'center', height: 36, paddingHorizontal: 12 },
 });

@@ -3,8 +3,8 @@ import { StyleSheet, Switch, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Screen, Card, Button, Stagger, Springy, SectionHeader } from '../../src/components';
-import { Text, useTheme, radius, space } from '../../src/theme';
+import { Screen, Group, Row, Segmented, Springy } from '../../src/components';
+import { Text, useTheme, radius, space, LAYOUT } from '../../src/theme';
 import { useShelter } from '../../src/data';
 import type { GuidelineSection } from '../../src/data';
 import { QuickExit, useSession, usePrivacy, AUTO_LOCK_CHOICES, COVER_IDENTITY } from '../../src/safety';
@@ -18,127 +18,102 @@ export default function House() {
   const [open, setOpen] = useState<string | null>(guidelines[0]?.id ?? null);
 
   return (
-    <Screen
-      eyebrow="House"
-      title="Guidelines & settings"
-      subtitle="The house rules, and the controls that decide how much this app shows."
-      headerRight={<QuickExit />}
-    >
-      <Stagger index={1}>
-        <SectionHeader title="Guest guidelines" />
-        <View style={{ gap: space.md }}>
-          {guidelines.map((g) => (
-            <GuidelineCard
-              key={g.id}
-              section={g}
-              open={open === g.id}
-              onToggle={() => setOpen(open === g.id ? null : g.id)}
-            />
-          ))}
-        </View>
-      </Stagger>
+    <Screen title="House" headerRight={<QuickExit />}>
+      <Group header="Guest guidelines">
+        {guidelines.map((g) => (
+          <Guideline
+            key={g.id}
+            section={g}
+            open={open === g.id}
+            onToggle={() => setOpen(open === g.id ? null : g.id)}
+          />
+        ))}
+      </Group>
 
-      <Stagger index={2} style={{ marginTop: space['2xl'] }}>
-        <SectionHeader title="Privacy on this phone" />
-        <Card padded={false}>
-          <Toggle
-            icon="eye-off-outline"
+      <View style={{ marginTop: space['2xl'] }}>
+        <Group
+          header="Privacy on this phone"
+          footer="Nothing about you is saved on this phone. Signing out — by hand, by timeout, or by quick exit — leaves nothing behind."
+        >
+          <Row
+            icon="eye-off"
+            accent="grey"
             title="Discreet mode"
-            body={`Shows the app as “${COVER_IDENTITY.name}” instead of the shelter's name.`}
-            value={privacy.stealthMode}
-            onChange={(v) => privacy.set('stealthMode', v)}
+            subtitle={`Shows the app as “${COVER_IDENTITY.name}”.`}
+            accessory="none"
+            right={
+              <Switch
+                value={privacy.stealthMode}
+                onValueChange={(v) => privacy.set('stealthMode', v)}
+                trackColor={{ true: c.tint, false: c.fillStrong }}
+                thumbColor="#FFFFFF"
+                accessibilityLabel="Discreet mode"
+              />
+            }
           />
-          <Toggle
-            icon="notifications-off-outline"
+          <Row
+            icon="notifications-off"
+            accent="grey"
             title="Quiet notifications"
-            body="Lock-screen alerts never name the shelter or show what a message says."
-            value={privacy.quietNotifications}
-            onChange={(v) => privacy.set('quietNotifications', v)}
+            subtitle="Alerts never name the shelter or show message content."
+            accessory="none"
+            right={
+              <Switch
+                value={privacy.quietNotifications}
+                onValueChange={(v) => privacy.set('quietNotifications', v)}
+                trackColor={{ true: c.tint, false: c.fillStrong }}
+                thumbColor="#FFFFFF"
+                accessibilityLabel="Quiet notifications"
+              />
+            }
           />
-          <Toggle
-            icon="phone-portrait-outline"
+          <Row
+            icon="phone-portrait"
+            accent="grey"
             title="Lock when I switch apps"
-            body="Signs you out if the app sits in the background."
-            value={privacy.lockOnBackground}
-            onChange={(v) => privacy.set('lockOnBackground', v)}
-            last
+            accessory="none"
+            right={
+              <Switch
+                value={privacy.lockOnBackground}
+                onValueChange={(v) => privacy.set('lockOnBackground', v)}
+                trackColor={{ true: c.tint, false: c.fillStrong }}
+                thumbColor="#FFFFFF"
+                accessibilityLabel="Lock when I switch apps"
+              />
+            }
           />
-        </Card>
+        </Group>
+      </View>
 
-        <Card style={{ marginTop: space.md }}>
-          <View style={styles.row}>
-            <View style={[styles.icon, { backgroundColor: c.primarySoft }]}>
-              <Ionicons name="time-outline" size={19} color={c.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text variant="bodyStrong">Sign me out after</Text>
-              <Text variant="caption" tone="muted" style={{ marginTop: 1 }}>
-                Of no tapping or scrolling.
-              </Text>
-            </View>
-          </View>
+      <View style={{ marginTop: space['2xl'] }}>
+        <Group padded header="Sign me out after" footer="Of no tapping or scrolling.">
+          <Segmented
+            options={AUTO_LOCK_CHOICES.map((m) => ({ value: String(m), label: `${m} min` }))}
+            value={String(privacy.autoLockMinutes)}
+            onChange={(v) => privacy.set('autoLockMinutes', Number(v))}
+          />
+        </Group>
+      </View>
 
-          <View style={styles.chips}>
-            {AUTO_LOCK_CHOICES.map((m) => {
-              const active = privacy.autoLockMinutes === m;
-              return (
-                <Springy
-                  key={m}
-                  onPress={() => privacy.set('autoLockMinutes', m)}
-                  scaleTo={0.93}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`${m} minutes`}
-                  style={StyleSheet.flatten([
-                    styles.chip,
-                    { backgroundColor: active ? c.primary : c.surfaceAlt, borderColor: active ? c.primary : c.line },
-                  ])}
-                >
-                  <Text variant="label" style={{ color: active ? c.onPrimary : c.inkMuted }}>
-                    {m} min
-                  </Text>
-                </Springy>
-              );
-            })}
-          </View>
-        </Card>
-
-        <Text variant="caption" tone="faint" style={{ marginTop: space.md }}>
-          Nothing about you is saved on this phone. Signing out — by hand, by timeout, or by
-          quick exit — leaves nothing behind.
-        </Text>
-      </Stagger>
-
-      <Stagger index={3} style={{ marginTop: space['2xl'] }}>
-        <Card tone="alt" flat>
-          <Text variant="label" caps tone="faint">
-            Signed in as
-          </Text>
-          <Text variant="heading" style={{ marginTop: 4 }}>
-            {session?.code}
-          </Text>
-          {session?.label ? (
-            <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-              {session.label}
-            </Text>
-          ) : null}
-          <Button
-            label="Sign out"
-            variant="secondary"
-            icon="log-out-outline"
-            style={{ marginTop: space.lg }}
+      <View style={{ marginTop: space['2xl'] }}>
+        <Group header="Signed in as" footer={session?.label}>
+          <Row title={session?.code ?? ''} accessory="none" />
+          <Row
+            title="Sign out"
+            destructive
+            accessory="none"
             onPress={() => {
               signOut('manual');
               router.replace('/');
             }}
           />
-        </Card>
-      </Stagger>
+        </Group>
+      </View>
     </Screen>
   );
 }
 
-function GuidelineCard({
+function Guideline({
   section,
   open,
   onToggle,
@@ -150,101 +125,52 @@ function GuidelineCard({
   const { c } = useTheme();
 
   return (
-    <Card padded={false}>
+    <View>
       <Springy
         onPress={onToggle}
-        scaleTo={0.99}
+        highlight
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         accessibilityLabel={section.title}
-        style={{ padding: space.base }}
       >
-        <View style={styles.row}>
-          <View style={[styles.icon, { backgroundColor: c.surfaceAlt }]}>
-            <Ionicons name={section.icon as keyof typeof Ionicons.glyphMap} size={19} color={c.inkMuted} />
+        <View style={styles.head}>
+          <View style={[styles.icon, { backgroundColor: c.iconGrey }]}>
+            <Ionicons name={section.icon.replace('-outline', '') as keyof typeof Ionicons.glyphMap} size={16} color="#FFFFFF" />
           </View>
-          <Text variant="subhead" style={{ flex: 1 }}>
+          <Text variant="body" style={{ flex: 1 }}>
             {section.title}
           </Text>
-          <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={c.inkFaint} />
+          <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={17} color={c.labelTertiary} />
         </View>
       </Springy>
 
       {open ? (
-        <Stagger index={0} distance={6} style={{ paddingHorizontal: space.base, paddingBottom: space.base }}>
-          <View style={[styles.rule, { backgroundColor: c.line }]} />
-          <View style={{ gap: space.md }}>
-            {section.items.map((item, i) => (
-              <View key={i} style={styles.bulletRow}>
-                <View style={[styles.bullet, { backgroundColor: c.primary }]} />
-                <Text variant="callout" style={{ flex: 1 }}>
-                  {item}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </Stagger>
+        <View style={styles.body}>
+          {section.items.map((item, i) => (
+            <View key={i} style={styles.bullet}>
+              <View style={[styles.dot, { backgroundColor: c.labelTertiary }]} />
+              <Text variant="subhead" style={{ flex: 1 }}>
+                {item}
+              </Text>
+            </View>
+          ))}
+        </View>
       ) : null}
-    </Card>
-  );
-}
-
-function Toggle({
-  icon,
-  title,
-  body,
-  value,
-  onChange,
-  last,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  body: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  last?: boolean;
-}) {
-  const { c } = useTheme();
-  return (
-    <View
-      style={[
-        styles.toggleRow,
-        !last && { borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: c.line },
-      ]}
-    >
-      <View style={[styles.icon, { backgroundColor: c.primarySoft }]}>
-        <Ionicons name={icon} size={19} color={c.primary} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text variant="bodyStrong">{title}</Text>
-        <Text variant="caption" tone="muted" style={{ marginTop: 1 }}>
-          {body}
-        </Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        trackColor={{ true: c.primary, false: c.lineStrong }}
-        thumbColor={c.surface}
-        accessibilityLabel={title}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.base },
-  icon: { width: 38, height: 38, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
-  rule: { height: StyleSheet.hairlineWidth * 2, marginBottom: space.base },
-  bulletRow: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
-  bullet: { width: 5, height: 5, borderRadius: 5, marginTop: 9 },
-  chips: { flexDirection: 'row', gap: space.sm, marginTop: space.base, flexWrap: 'wrap' },
-  chip: {
-    paddingHorizontal: space.base,
-    height: 38,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    justifyContent: 'center',
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    minHeight: LAYOUT.row,
+    paddingHorizontal: LAYOUT.margin,
+    paddingVertical: space.sm,
   },
+  icon: { width: 29, height: 29, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  body: { paddingLeft: LAYOUT.margin + 29 + space.md, paddingRight: LAYOUT.margin, paddingBottom: space.base, gap: space.sm },
+  bullet: { flexDirection: 'row', gap: space.sm, alignItems: 'flex-start' },
+  dot: { width: 4, height: 4, borderRadius: 4, marginTop: 8 },
 });

@@ -1,38 +1,47 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Animated, Pressable, Platform, type PressableProps, type ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '../theme';
 
 interface Props extends Omit<PressableProps, 'style'> {
   style?: ViewStyle | ViewStyle[];
-  /** How far the surface sinks under a finger. Larger targets can take more. */
+  /** Scale response, for buttons and tiles. 1 disables it. */
   scaleTo?: number;
+  /**
+   * List-row response: the row fills with the system highlight colour while
+   * held, the way a native table cell does. Rows do not shrink on iOS, so this
+   * is used instead of scale rather than alongside it.
+   */
+  highlight?: boolean;
   haptic?: 'light' | 'medium' | 'heavy' | 'none';
   children: React.ReactNode;
 }
 
-/**
- * Pressable with a spring response. Touch feedback is doing real work here: a lot
- * of this app is used quickly and half-looked-at, and a surface that moves
- * confirms the tap landed without needing a screen change to prove it.
- */
-export function Springy({ style, scaleTo = 0.97, haptic = 'light', children, onPressIn, onPressOut, ...rest }: Props) {
+export function Springy({
+  style,
+  scaleTo = 0.97,
+  highlight,
+  haptic = 'none',
+  children,
+  onPressIn,
+  onPressOut,
+  ...rest
+}: Props) {
+  const { c } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
+  const [held, setHeld] = useState(false);
 
   const spring = useCallback(
     (to: number) =>
-      Animated.spring(scale, {
-        toValue: to,
-        useNativeDriver: true,
-        speed: 40,
-        bounciness: 4,
-      }).start(),
+      Animated.spring(scale, { toValue: to, useNativeDriver: true, speed: 40, bounciness: 3 }).start(),
     [scale],
   );
 
   return (
     <Pressable
       onPressIn={(e) => {
-        spring(scaleTo);
+        if (highlight) setHeld(true);
+        if (scaleTo !== 1 && !highlight) spring(scaleTo);
         if (haptic !== 'none' && Platform.OS !== 'web') {
           Haptics.impactAsync(
             haptic === 'heavy'
@@ -45,12 +54,21 @@ export function Springy({ style, scaleTo = 0.97, haptic = 'light', children, onP
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        spring(1);
+        if (highlight) setHeld(false);
+        if (scaleTo !== 1 && !highlight) spring(1);
         onPressOut?.(e);
       }}
       {...rest}
     >
-      <Animated.View style={[style, { transform: [{ scale }] }]}>{children}</Animated.View>
+      <Animated.View
+        style={[
+          style,
+          held && { backgroundColor: c.fill },
+          !highlight && scaleTo !== 1 && { transform: [{ scale }] },
+        ]}
+      >
+        {children}
+      </Animated.View>
     </Pressable>
   );
 }

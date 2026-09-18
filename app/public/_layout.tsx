@@ -5,11 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CrisisBar } from '../../src/components';
-import { useTheme, fonts } from '../../src/theme';
+import { useTheme } from '../../src/theme';
 import { useShelter } from '../../src/data';
 
-/** Fixed so the crisis dock can be positioned above it without measuring. */
-const TAB_BAR_HEIGHT = 60;
+const TAB_BAR_HEIGHT = 52;
+const DOCK_HEIGHT = 60;
 
 export default function PublicLayout() {
   const { c } = useTheme();
@@ -21,53 +21,61 @@ export default function PublicLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: c.primary,
-          tabBarInactiveTintColor: c.inkFaint,
+          tabBarActiveTintColor: c.tint,
+          tabBarInactiveTintColor: c.labelSecondary,
           tabBarStyle: {
             height: TAB_BAR_HEIGHT + insets.bottom,
             paddingBottom: insets.bottom,
-            paddingTop: 6,
-            backgroundColor: c.surface,
-            borderTopColor: c.line,
-            borderTopWidth: StyleSheet.hairlineWidth * 2,
+            paddingTop: 2,
+            backgroundColor: c.chrome,
+            borderTopColor: c.separator,
+            borderTopWidth: StyleSheet.hairlineWidth,
           },
-          tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11, marginTop: 2 },
+          tabBarLabelStyle: { fontSize: 10, marginTop: 0, marginBottom: 2 },
         }}
       >
         <Tabs.Screen
           name="index"
           options={{
             title: 'Help',
-            tabBarIcon: ({ color, size }) => <Ionicons name="heart-outline" size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'heart' : 'heart-outline'} size={25} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="needs"
           options={{
             title: 'Needs',
-            tabBarIcon: ({ color, size }) => <Ionicons name="basket-outline" size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'basket' : 'basket-outline'} size={25} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="resources"
           options={{
             title: 'Resources',
-            tabBarIcon: ({ color, size }) => <Ionicons name="compass-outline" size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'compass' : 'compass-outline'} size={25} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="contact"
           options={{
             title: 'Contact',
-            tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'chatbubble' : 'chatbubble-outline'} size={25} color={color} />
+            ),
           }}
         />
       </Tabs>
 
-      {/* "Always on screen" from the spec, taken literally: the dock is part of the
-          navigator, so it survives every tab change and never scrolls away. */}
+      {/* "Always on screen" taken literally: the dock belongs to the navigator,
+          so it survives every tab change and never scrolls away. */}
       <View
-        style={[styles.dock, { bottom: TAB_BAR_HEIGHT + insets.bottom }]}
+        style={[styles.dock, { bottom: TAB_BAR_HEIGHT + insets.bottom, height: DOCK_HEIGHT }]}
         pointerEvents="box-none"
       >
         <CrisisBar number={profile.crisisLine} safeArea={false} />
@@ -77,5 +85,5 @@ export default function PublicLayout() {
 }
 
 const styles = StyleSheet.create({
-  dock: { position: 'absolute', left: 0, right: 0, height: 92 },
+  dock: { position: 'absolute', left: 0, right: 0, justifyContent: 'flex-end' },
 });

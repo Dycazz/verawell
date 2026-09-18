@@ -1,136 +1,160 @@
-import React from 'react';
-import { Platform, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useRef } from 'react';
+import { Animated, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Springy } from './Pressable';
-import { Stagger } from './Stagger';
-import { Text, useTheme, space, radius } from '../theme';
+import { Text, useTheme, LAYOUT, space } from '../theme';
 
-/** The console is read on laptops; everything else is a phone. */
-export const CONTENT_MAX = 720;
+export const CONTENT_MAX = 700;
+const NAV_HEIGHT = 44;
 
-interface ScreenProps {
-  children: React.ReactNode;
-  /** Small uppercase line above the title. */
-  eyebrow?: string;
-  title?: string;
-  subtitle?: string;
-  /** Soft colour wash behind the header — used on landing screens only. */
-  wash?: boolean;
-  back?: boolean;
-  headerRight?: React.ReactNode;
-  scroll?: boolean;
-  /** Extra bottom padding so sticky bars never cover the last row. */
-  bottomInset?: number;
-  contentStyle?: ViewStyle;
-  maxWidth?: number;
-  /** Off when a parent chrome (the staff console bar) already cleared the notch. */
-  topInset?: boolean;
-}
-
+/**
+ * Screen chassis with a collapsing large title.
+ *
+ * The large title sits in the scroll content and scrolls away; a compact title
+ * and a hairline fade into the bar as it goes. This is the standard iOS
+ * navigation behaviour, and getting it right is most of why a screen reads as
+ * native rather than as a web page in a phone frame.
+ */
 export function Screen({
   children,
-  eyebrow,
   title,
   subtitle,
-  wash,
   back,
+  backLabel = 'Back',
   headerRight,
   scroll = true,
   bottomInset = 0,
   contentStyle,
   maxWidth = CONTENT_MAX,
   topInset = true,
-}: ScreenProps) {
-  const { c, isDark } = useTheme();
+}: {
+  children: React.ReactNode;
+  title?: string;
+  subtitle?: string;
+  back?: boolean;
+  backLabel?: string;
+  headerRight?: React.ReactNode;
+  scroll?: boolean;
+  bottomInset?: number;
+  contentStyle?: ViewStyle;
+  maxWidth?: number;
+  topInset?: boolean;
+}) {
+  const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  const y = useRef(new Animated.Value(0)).current;
 
-  const header =
-    title || back || eyebrow ? (
-      <Stagger index={0} style={{ marginBottom: space.lg }}>
-        {(back || headerRight) && (
-          <View style={styles.topRow}>
-            {back ? (
-              <Springy
-                onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-                scaleTo={0.9}
-                accessibilityRole="button"
-                accessibilityLabel="Go back"
-                style={StyleSheet.flatten([styles.backBtn, { backgroundColor: c.surfaceAlt }])}
-              >
-                <Ionicons name="chevron-back" size={22} color={c.ink} />
-              </Springy>
-            ) : (
-              <View />
-            )}
-            {headerRight}
-          </View>
-        )}
+  const top = topInset ? insets.top : 0;
 
-        {eyebrow ? (
-          <Text variant="label" caps tone="primary" style={{ marginBottom: 6 }}>
-            {eyebrow}
-          </Text>
-        ) : null}
-        {title ? <Text variant="display">{title}</Text> : null}
-        {subtitle ? (
-          <Text variant="callout" tone="muted" style={{ marginTop: space.sm, maxWidth: 520 }}>
-            {subtitle}
-          </Text>
-        ) : null}
-      </Stagger>
-    ) : null;
+  // Hand over from large title to compact title across the distance the large
+  // title actually travels.
+  const collapsed = y.interpolate({
+    inputRange: [16, 44],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  const showBar = !!(back || headerRight || title);
 
   const inner = (
     <View style={[{ width: '100%', maxWidth, alignSelf: 'center' }, contentStyle]}>
-      {header}
+      {title ? (
+        <View style={styles.titleBlock}>
+          <Text variant="largeTitle">{title}</Text>
+          {subtitle ? (
+            <Text variant="subhead" tone="secondary" style={{ marginTop: 4, maxWidth: 520 }}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
       {children}
     </View>
   );
 
   const padding = {
-    paddingTop: (topInset ? insets.top : 0) + space.base,
-    paddingHorizontal: space.lg,
-    paddingBottom: insets.bottom + space.xl + bottomInset,
+    paddingTop: (showBar ? top + NAV_HEIGHT : top) + space.sm,
+    paddingHorizontal: LAYOUT.margin,
+    paddingBottom: insets.bottom + space['2xl'] + bottomInset,
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      {wash ? (
-        <LinearGradient
-          colors={[
-            isDark ? 'rgba(121,196,180,0.10)' : 'rgba(14,79,73,0.10)',
-            isDark ? 'rgba(121,196,180,0)' : 'rgba(14,79,73,0)',
-          ]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-      ) : null}
-
       {scroll ? (
-        <ScrollView
+        <Animated.ScrollView
           contentContainerStyle={padding}
           keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
           showsVerticalScrollIndicator={Platform.OS === 'web'}
+          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y } } }], { useNativeDriver: true })}
         >
           {inner}
-        </ScrollView>
+        </Animated.ScrollView>
       ) : (
         <View style={[{ flex: 1 }, padding]}>{inner}</View>
       )}
+
+      {showBar ? (
+        <View style={[styles.bar, { paddingTop: top, height: top + NAV_HEIGHT }]} pointerEvents="box-none">
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: c.chrome, opacity: collapsed },
+            ]}
+            pointerEvents="none"
+          />
+          <Animated.View
+            style={[styles.hairline, { backgroundColor: c.separator, opacity: collapsed }]}
+            pointerEvents="none"
+          />
+
+          <View style={styles.barRow}>
+            <View style={styles.barSide}>
+              {back ? (
+                <Springy
+                  onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+                  scaleTo={1}
+                  accessibilityRole="button"
+                  accessibilityLabel={backLabel}
+                  style={styles.backBtn}
+                >
+                  <Ionicons name="chevron-back" size={26} color={c.tint} style={{ marginLeft: -6 }} />
+                  <Text variant="body" style={{ color: c.tint }}>
+                    {backLabel}
+                  </Text>
+                </Springy>
+              ) : null}
+            </View>
+
+            {title ? (
+              <Animated.View style={[styles.barTitle, { opacity: collapsed }]} pointerEvents="none">
+                <Text variant="headline" numberOfLines={1}>
+                  {title}
+                </Text>
+              </Animated.View>
+            ) : null}
+
+            <View style={[styles.barSide, { alignItems: 'flex-end' }]}>{headerRight}</View>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  topRow: {
+  titleBlock: { marginBottom: space.lg, paddingHorizontal: space.xs },
+  bar: { position: 'absolute', top: 0, left: 0, right: 0 },
+  hairline: { position: 'absolute', left: 0, right: 0, bottom: 0, height: StyleSheet.hairlineWidth },
+  barRow: {
+    height: NAV_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: space.base,
-    minHeight: 44,
+    paddingHorizontal: space.sm,
   },
-  backBtn: { width: 44, height: 44, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  barSide: { flex: 1, justifyContent: 'center' },
+  backBtn: { flexDirection: 'row', alignItems: 'center', height: NAV_HEIGHT, paddingRight: space.sm },
+  barTitle: { flex: 2, alignItems: 'center' },
 });

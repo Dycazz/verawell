@@ -5,9 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Springy, Badge, Conversation } from '../../src/components';
-import { Text, useTheme, radius, space } from '../../src/theme';
+import { Text, useTheme, space } from '../../src/theme';
 import { useBackend, useShelter } from '../../src/data';
-import { relativeTime } from '../../src/lib/contact';
 import { QuickExit, useSession } from '../../src/safety';
 
 export default function GuestThread() {
@@ -29,9 +28,9 @@ export default function GuestThread() {
   if (!permitted || !thread) {
     return (
       <View style={[styles.missing, { backgroundColor: c.bg, paddingTop: insets.top + space['3xl'] }]}>
-        <Text variant="heading">Conversation not available</Text>
-        <Springy onPress={() => router.replace('/guest/advocate')} style={{ marginTop: space.lg }}>
-          <Text variant="callout" tone="primary">
+        <Text variant="title3">Conversation not available</Text>
+        <Springy onPress={() => router.replace('/guest/advocate')} scaleTo={1} style={{ marginTop: space.base }}>
+          <Text variant="body" style={{ color: c.tint }}>
             Back to messages
           </Text>
         </Springy>
@@ -44,23 +43,25 @@ export default function GuestThread() {
       style={{ flex: 1, backgroundColor: c.bg }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={[styles.header, { paddingTop: insets.top + space.md, borderBottomColor: c.line }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top, backgroundColor: c.chrome, borderBottomColor: c.separator },
+        ]}
+      >
         <Springy
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/guest/advocate'))}
-          scaleTo={0.9}
+          scaleTo={1}
           accessibilityRole="button"
-          accessibilityLabel="Back"
-          style={StyleSheet.flatten([styles.backBtn, { backgroundColor: c.surfaceAlt }])}
+          accessibilityLabel="Back to messages"
+          style={styles.back}
         >
-          <Ionicons name="chevron-back" size={22} color={c.ink} />
+          <Ionicons name="chevron-back" size={26} color={c.tint} style={{ marginLeft: -6 }} />
         </Springy>
 
         <View style={{ flex: 1 }}>
-          <Text variant="subhead" numberOfLines={1}>
+          <Text variant="headline" numberOfLines={1}>
             {thread.topic}
-          </Text>
-          <Text variant="caption" tone="faint">
-            Started {relativeTime(thread.createdAt)}
           </Text>
         </View>
 
@@ -82,11 +83,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.md,
-    paddingHorizontal: space.lg,
-    paddingBottom: space.md,
-    borderBottomWidth: StyleSheet.hairlineWidth * 2,
+    gap: space.sm,
+    paddingHorizontal: space.sm,
+    paddingBottom: space.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  backBtn: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  missing: { flex: 1, alignItems: 'center', paddingHorizontal: space.lg },
+  back: { height: 44, justifyContent: 'center', paddingRight: 2 },
+  missing: { flex: 1, alignItems: 'center', paddingHorizontal: space.base },
 });

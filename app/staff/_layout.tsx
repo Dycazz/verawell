@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Springy, Badge } from '../../src/components';
-import { Text, useTheme, radius, space, fonts } from '../../src/theme';
+import { Text, useTheme, radius, space } from '../../src/theme';
 import { useSession } from '../../src/safety';
 import { useStaffInbox } from '../../src/data';
 
@@ -13,11 +13,11 @@ import { useStaffInbox } from '../../src/data';
 const WIDE = 820;
 
 const NAV = [
-  { href: '/staff', label: 'Shift', icon: 'pulse-outline' as const },
-  { href: '/staff/inbox', label: 'Inbox', icon: 'mail-outline' as const },
-  { href: '/staff/needs', label: 'Needs', icon: 'basket-outline' as const },
-  { href: '/staff/schedule', label: 'Schedule', icon: 'calendar-outline' as const },
-  { href: '/staff/codes', label: 'Codes', icon: 'key-outline' as const },
+  { href: '/staff', label: 'Shift', icon: 'pulse' as const, iconOff: 'pulse-outline' as const },
+  { href: '/staff/inbox', label: 'Inbox', icon: 'mail' as const, iconOff: 'mail-outline' as const },
+  { href: '/staff/needs', label: 'Needs', icon: 'basket' as const, iconOff: 'basket-outline' as const },
+  { href: '/staff/schedule', label: 'Schedule', icon: 'calendar' as const, iconOff: 'calendar-outline' as const },
+  { href: '/staff/codes', label: 'Codes', icon: 'key' as const, iconOff: 'key-outline' as const },
 ];
 
 export default function StaffLayout() {
@@ -28,9 +28,7 @@ export default function StaffLayout() {
   const { session, signOut } = useSession();
   const inbox = useStaffInbox();
 
-  if (!session || session.role !== 'staff') {
-    return <Redirect href="/staff-login" />;
-  }
+  if (!session || session.role !== 'staff') return <Redirect href="/staff-login" />;
 
   const wide = width >= WIDE;
   const pending = inbox.unreadThreads + inbox.openPublic;
@@ -43,27 +41,48 @@ export default function StaffLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      {/* Desk layout: one horizontal bar carrying brand, sections and sign-out.
-          Advocates work this console between other tasks, so the current section
-          and the inbox count stay visible at all times. */}
       {wide ? (
-        <View style={[styles.topBar, { paddingTop: insets.top + space.md, backgroundColor: c.surface, borderBottomColor: c.line }]}>
+        <View
+          style={[
+            styles.topBar,
+            { paddingTop: insets.top + space.sm, backgroundColor: c.chrome, borderBottomColor: c.separator },
+          ]}
+        >
           <View style={styles.topInner}>
             <View style={styles.brand}>
-              <View style={[styles.mark, { backgroundColor: c.primary }]}>
-                <Text style={{ color: c.onPrimary, fontFamily: fonts.displayBold, fontSize: 16 }}>V</Text>
+              <View style={[styles.mark, { backgroundColor: c.tint }]}>
+                <Ionicons name="home" size={15} color={c.onTint} />
               </View>
-              <View>
-                <Text variant="subhead">Staff console</Text>
-                <Text variant="caption" tone="faint">
-                  VeraWell House
-                </Text>
-              </View>
+              <Text variant="headline">VeraWell</Text>
+              <Text variant="subhead" tone="tertiary">
+                Staff console
+              </Text>
             </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
               {nav.map((item) => (
-                <NavPill key={item.href} {...item} onPress={() => router.replace(item.href)} />
+                <Springy
+                  key={item.href}
+                  onPress={() => router.replace(item.href)}
+                  scaleTo={1}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: item.active }}
+                  accessibilityLabel={item.label}
+                  style={StyleSheet.flatten([
+                    styles.pill,
+                    item.active && { backgroundColor: c.fill },
+                  ])}
+                >
+                  <Ionicons
+                    name={item.active ? item.icon : item.iconOff}
+                    size={16}
+                    color={item.active ? c.label : c.labelSecondary}
+                  />
+                  <Text variant="subhead" strong={item.active} tone={item.active ? 'default' : 'secondary'}>
+                    {item.label}
+                  </Text>
+                  {item.badge ? <Badge label={String(item.badge)} tone="crisis" /> : null}
+                </Springy>
               ))}
             </ScrollView>
 
@@ -72,13 +91,12 @@ export default function StaffLayout() {
                 signOut('manual');
                 router.replace('/');
               }}
-              scaleTo={0.94}
+              scaleTo={1}
               accessibilityRole="button"
               accessibilityLabel="Sign out"
-              style={StyleSheet.flatten([styles.signOut, { borderColor: c.line }])}
+              style={{ padding: space.sm }}
             >
-              <Ionicons name="log-out-outline" size={17} color={c.inkMuted} />
-              <Text variant="label" tone="muted">
+              <Text variant="subhead" style={{ color: c.tint }}>
                 Sign out
               </Text>
             </Springy>
@@ -94,15 +112,14 @@ export default function StaffLayout() {
         <View
           style={[
             styles.bottomBar,
-            { paddingBottom: insets.bottom || space.sm, backgroundColor: c.surface, borderTopColor: c.line },
+            { paddingBottom: insets.bottom || space.sm, backgroundColor: c.chrome, borderTopColor: c.separator },
           ]}
         >
           {nav.map((item) => (
             <Springy
               key={item.href}
               onPress={() => router.replace(item.href)}
-              scaleTo={0.9}
-              haptic="none"
+              scaleTo={1}
               accessibilityRole="button"
               accessibilityState={{ selected: item.active }}
               accessibilityLabel={item.label}
@@ -110,15 +127,17 @@ export default function StaffLayout() {
             >
               <View>
                 <Ionicons
-                  name={item.icon}
-                  size={22}
-                  color={item.active ? c.primary : c.inkFaint}
+                  name={item.active ? item.icon : item.iconOff}
+                  size={25}
+                  color={item.active ? c.tint : c.labelSecondary}
                 />
-                {item.badge ? <View style={[styles.dot, { backgroundColor: c.clay, borderColor: c.surface }]} /> : null}
+                {item.badge ? (
+                  <View style={[styles.dot, { backgroundColor: c.crisis, borderColor: c.chrome }]} />
+                ) : null}
               </View>
               <Text
-                variant="caption"
-                style={{ fontSize: 11, marginTop: 2, color: item.active ? c.primary : c.inkFaint }}
+                variant="caption2"
+                style={{ marginTop: 1, color: item.active ? c.tint : c.labelSecondary }}
               >
                 {item.label}
               </Text>
@@ -130,77 +149,28 @@ export default function StaffLayout() {
   );
 }
 
-function NavPill({
-  label,
-  icon,
-  active,
-  badge,
-  onPress,
-}: {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  active: boolean;
-  badge?: number;
-  onPress: () => void;
-}) {
-  const { c } = useTheme();
-  return (
-    <Springy
-      onPress={onPress}
-      scaleTo={0.95}
-      haptic="none"
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      accessibilityLabel={label}
-      style={StyleSheet.flatten([
-        styles.pill,
-        { backgroundColor: active ? c.primarySoft : 'transparent' },
-      ])}
-    >
-      <Ionicons name={icon} size={17} color={active ? c.primary : c.inkMuted} />
-      <Text variant="label" style={{ color: active ? c.primary : c.inkMuted }}>
-        {label}
-      </Text>
-      {badge ? <Badge label={String(badge)} tone="clay" /> : null}
-    </Springy>
-  );
-}
-
 const styles = StyleSheet.create({
-  topBar: { paddingHorizontal: space.lg, paddingBottom: space.md, borderBottomWidth: StyleSheet.hairlineWidth * 2 },
+  topBar: { paddingHorizontal: space.lg, paddingBottom: space.sm, borderBottomWidth: StyleSheet.hairlineWidth },
   topInner: {
     width: '100%',
-    maxWidth: 1180,
+    maxWidth: 1120,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.xl,
+    gap: space.lg,
   },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  mark: { width: 34, height: 34, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  navRow: { flexDirection: 'row', gap: space.xs, alignItems: 'center' },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  mark: { width: 24, height: 24, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  navRow: { flexDirection: 'row', gap: 2, alignItems: 'center' },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: space.base,
-    height: 40,
-    borderRadius: radius.pill,
-  },
-  signOut: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 6,
-    paddingHorizontal: space.base,
-    height: 38,
-    borderRadius: radius.pill,
-    borderWidth: 1,
+    paddingHorizontal: space.md,
+    height: 32,
+    borderRadius: radius.sm,
   },
-  bottomBar: {
-    flexDirection: 'row',
-    paddingTop: space.sm,
-    borderTopWidth: StyleSheet.hairlineWidth * 2,
-  },
-  bottomItem: { flex: 1, alignItems: 'center', paddingVertical: 4 },
-  dot: { position: 'absolute', top: -2, right: -4, width: 10, height: 10, borderRadius: 10, borderWidth: 2 },
+  bottomBar: { flexDirection: 'row', paddingTop: space.xs, borderTopWidth: StyleSheet.hairlineWidth },
+  bottomItem: { flex: 1, alignItems: 'center', paddingVertical: 2 },
+  dot: { position: 'absolute', top: -1, right: -3, width: 9, height: 9, borderRadius: 9, borderWidth: 1.5 },
 });

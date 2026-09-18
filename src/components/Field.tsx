@@ -1,63 +1,57 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
-import { Text, useTheme, radius, space, fonts, HIT } from '../theme';
+import { Text, useTheme, radius, space, LAYOUT, weight } from '../theme';
 
-interface Props extends TextInputProps {
-  label?: string;
-  hint?: string;
-  error?: string;
-  multiline?: boolean;
-}
-
-export function Field({ label, hint, error, multiline, style, ...rest }: Props) {
+/**
+ * Filled input, no outline. Borders on every field were doing nothing that the
+ * fill does not already do, and they made every form look like a wireframe.
+ */
+export function Field({
+  label,
+  hint,
+  error,
+  multiline,
+  style,
+  ...rest
+}: TextInputProps & { label?: string; hint?: string; error?: string }) {
   const { c } = useTheme();
-  const [focused, setFocused] = useState(false);
 
   return (
-    <View style={{ gap: space.sm }}>
+    <View>
       {label ? (
-        <Text variant="label" caps tone="faint">
+        <Text variant="footnote" tone="secondary" style={{ marginBottom: 6 }}>
           {label}
         </Text>
       ) : null}
 
       <TextInput
-        placeholderTextColor={c.inkFaint}
-        onFocus={(e) => {
-          setFocused(true);
-          rest.onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFocused(false);
-          rest.onBlur?.(e);
-        }}
+        placeholderTextColor={c.labelTertiary}
         multiline={multiline}
         style={StyleSheet.flatten([
           {
-            minHeight: multiline ? 112 : HIT,
-            paddingHorizontal: space.base,
+            minHeight: multiline ? 96 : LAYOUT.row,
+            paddingHorizontal: space.md,
             paddingVertical: multiline ? space.md : space.sm,
             textAlignVertical: multiline ? 'top' : 'center',
             borderRadius: radius.md,
-            borderWidth: 1.5,
-            borderColor: error ? c.crisis : focused ? c.primary : c.line,
-            backgroundColor: c.surface,
-            color: c.ink,
-            fontFamily: fonts.body,
-            fontSize: 16,
+            backgroundColor: c.fill,
+            color: c.label,
+            fontSize: 17,
             lineHeight: 22,
+            ...weight('400'),
           },
+          !!error && { backgroundColor: c.crisisFill },
           style,
         ])}
         {...rest}
       />
 
       {error ? (
-        <Text variant="caption" tone="crisis">
+        <Text variant="footnote" tone="crisis" style={{ marginTop: 6 }}>
           {error}
         </Text>
       ) : hint ? (
-        <Text variant="caption" tone="faint">
+        <Text variant="footnote" tone="secondary" style={{ marginTop: 6 }}>
           {hint}
         </Text>
       ) : null}
