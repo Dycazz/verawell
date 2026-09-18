@@ -156,6 +156,19 @@ to answer to work, so treat these as proposals, not decisions:
 Moderation of anonymous feedback and case-management integration are untouched —
 both belong to features that aren't in this tier.
 
+## Hosting the web build
+
+`npm run export:web` writes a static SPA to `dist/`. Expo Router resolves its
+initial route from `location.pathname`, so a build served from a sub-path would
+otherwise land on "Unmatched Route" — `app/+not-found.tsx` redirects anything
+unmatched to the front door, which makes the export portable to any base URL
+without knowing it at build time.
+
+The exported page also references its bundle and icon fonts by absolute paths,
+so it expects to be served from the root of its origin. To host it somewhere
+else, either set a base URL at export time or inline the bundle and the Ionicons
+font as data URIs to make a single self-contained HTML file.
+
 ## Status
 
 TypeScript is clean (`npm run typecheck`) and the web export builds
