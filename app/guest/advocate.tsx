@@ -15,7 +15,7 @@ export default function Advocate() {
   const { shift } = useShelter();
   const { session } = useSession();
   const code = session?.role === 'guest' ? session.code : null;
-  const threads = useThreadsForCode(code);
+  const threads = useThreadsForCode(code).filter((t) => (t.channel ?? 'advocate') === 'advocate');
 
   const [composing, setComposing] = useState(false);
   const [topic, setTopic] = useState('');

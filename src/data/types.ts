@@ -55,6 +55,8 @@ export interface ThreadMessage {
 
 export interface AdvocateThread {
   id: string;
+  /** Absent on older records, which were all advocate threads. */
+  channel?: 'advocate' | 'helpdesk';
   /** The anonymous code is the only handle staff ever see. */
   guestCode: string;
   topic: string;
@@ -121,6 +123,141 @@ export interface ShelterProfile {
   socials: { label: string; url: string; icon: string }[];
 }
 
+/* ---- Fast follow and Phase 2 ------------------------------------------- */
+
+export interface NewsPost {
+  id: string;
+  title: string;
+  body: string;
+  pinned?: boolean;
+  createdAt: number;
+}
+
+export type HelpKind = 'drive' | 'dropoff' | 'skills' | 'event';
+
+export interface WayToHelp {
+  id: string;
+  title: string;
+  description: string;
+  kind: HelpKind;
+  /** Free text so staff can write "Saturdays, 10am" without a schedule model. */
+  when?: string;
+}
+
+export interface Amenity {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  hours?: string;
+}
+
+export type PlaceKind = 'transit' | 'grocery' | 'clinic' | 'pharmacy' | 'library' | 'other';
+
+/**
+ * Static, staff-curated. There is no "near me" lookup on purpose: the app never
+ * asks for location, so the guide lists places relative to the shelter instead.
+ */
+export interface Place {
+  id: string;
+  name: string;
+  kind: PlaceKind;
+  note: string;
+  distance?: string;
+  address?: string;
+  phone?: string;
+}
+
+export interface LibraryArticle {
+  id: string;
+  title: string;
+  summary: string;
+  category: 'rights' | 'housing' | 'money' | 'health' | 'family' | 'safety';
+  /** Paragraphs separated by blank lines. */
+  body: string;
+}
+
+/** Everything staff can edit through the console's generic content editor. */
+export interface ContentMap {
+  news: NewsPost;
+  ways: WayToHelp;
+  amenities: Amenity;
+  places: Place;
+  library: LibraryArticle;
+}
+export type ContentKey = keyof ContentMap;
+
+/** Volunteer sign-ups and training requests from the public app. */
+export interface CommunityRequest {
+  id: string;
+  kind: 'volunteer' | 'training';
+  /** Optional on purpose, as with every public form. */
+  name?: string;
+  contactBack?: string;
+  summary: string;
+  fields: { label: string; value: string }[];
+  createdAt: number;
+  handled: boolean;
+}
+
+export interface Chore {
+  id: string;
+  title: string;
+  area: string;
+  /** Deliberately no "done by" — check-off is anonymous. */
+  doneAt?: number;
+}
+
+export type FeedbackKind = 'concern' | 'idea' | 'thanks';
+
+/**
+ * No guest code, no device id, no author. The only link between a submission
+ * and a person is whatever the person writes themselves.
+ */
+export interface Feedback {
+  id: string;
+  kind: FeedbackKind;
+  body: string;
+  createdAt: number;
+  status: 'new' | 'seen' | 'resolved';
+  /** When set, shown to every guest as "You said, we did". */
+  publicReply?: string;
+}
+
+export type WishKind = 'grocery' | 'big-ticket';
+
+/**
+ * A shared, anonymous household list. Approving an item publishes it to
+ * Current Needs, which is how one list powers both audiences.
+ */
+export interface WishlistItem {
+  id: string;
+  kind: WishKind;
+  title: string;
+  note?: string;
+  createdAt: number;
+  status: 'requested' | 'approved' | 'fulfilled' | 'declined';
+}
+
+export type ReferralKind = 'legal' | 'housing' | 'financial' | 'health' | 'other';
+
+/**
+ * Phase 2. Kept as an internal queue shaped so a case-management system could
+ * ingest it later — the integration itself depends on which system the shelter
+ * uses, which the spec lists as an open question.
+ */
+export interface ReferralRequest {
+  id: string;
+  guestCode: string;
+  kind: ReferralKind;
+  details: string;
+  createdAt: number;
+  updatedAt: number;
+  status: 'new' | 'in-progress' | 'referred' | 'closed';
+  /** Staff-written, visible to the guest who asked. */
+  staffNote?: string;
+}
+
 export interface ShelterState {
   profile: ShelterProfile;
   needs: NeedItem[];
@@ -133,4 +270,14 @@ export interface ShelterState {
   guidelines: GuidelineSection[];
   resources: CommunityResource[];
   safety: SafetyGuide[];
+  news: NewsPost[];
+  ways: WayToHelp[];
+  amenities: Amenity[];
+  places: Place[];
+  library: LibraryArticle[];
+  communityRequests: CommunityRequest[];
+  chores: Chore[];
+  feedback: Feedback[];
+  wishlist: WishlistItem[];
+  referrals: ReferralRequest[];
 }

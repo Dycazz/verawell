@@ -33,28 +33,38 @@ undiscoverable — a visible "return to shelter app" control would defeat it.
 
 ## What's built
 
-The spec sorts features by ship order, and the roadmap makes step 1 the Launch
-build. That is what this is: **both Launch tiers in full, plus the minimum
-console to make them work.** Fast-follow and Phase 2 are not started — better a
-complete Launch than a thin slice of everything.
+Everything the spec lists for the MVP: **Launch, Fast follow and Phase 2**, plus
+the Staff Console that makes the guest features work.
 
-**Community (no login)** — crisis contact docked on every screen, contact staff
-(call + message form), current needs, donation link-out, community resources,
-website and socials.
+**Community (no login)** — crisis contact docked on every screen, contact staff,
+current needs, donation link-out, community resources, website and socials.
+*Fast follow:* newsfeed (pinned posts first), volunteer sign-up, ways to help
+(drives, drop-offs, skills, events), training requests.
 
 **Guest (anonymous code login)** — contact an advocate with threaded replies,
-safety guides (personal, fire, severe weather, medical), staff status, advocate
-count, guest guidelines, house calendar, shelter-wide alerts.
+safety guides, staff status, advocate count, guest guidelines, house calendar,
+shelter-wide alerts. *Fast follow:* help desk chat, anonymous chore checklist,
+amenities, neighbourhood guide, guides & resources library, anonymous feedback
+with a public "You said, we did" board, and a shared shopping wishlist.
+*Phase 2:* referral requests (legal, housing, financial, health) with status and
+an advocate note the guest can see.
 
-**Staff Console (responsive)** — shift status and advocate count, post and
-retire house notices, inbox for guest threads and community messages, needs
-editor, calendar editor, issue and retire guest codes. It lays out as a desk app
-above 820px and a phone app below.
+**Staff Console (responsive)** — shift status and advocate count, house notices,
+inbox (advocate threads and help desk questions are labelled), needs editor,
+calendar editor, guest codes, and: volunteer & training requests, referral
+queue, feedback triage with optional public replies, wishlist review, chore list
+with daily reset, and a content editor for news, ways to help, amenities,
+neighbourhood places and guides. On a phone the console shows five tabs and a
+**More** hub for the rest.
 
-Not built, per the spec's own phasing: newsfeed, volunteer sign-up, ways to
-help, training requests, help desk chat, chore checklist, amenities,
-neighbourhood guide, resource library, anonymous story/feedback, shopping
-wishlists, referral requests.
+Two design decisions worth knowing about:
+
+- **One list, two audiences.** Approving a guest's wishlist item publishes it to
+  the public Current Needs list; marking it received flips it to *stocked*;
+  declining withdraws it. The spec asked for exactly this.
+- **Feedback carries no identity.** No guest code, session or device is passed
+  to `submitFeedback`, so there is nothing to look up. The trade-off is that
+  staff cannot reply privately — the only reply channel is the public board.
 
 ## Safety and privacy
 
@@ -153,8 +163,14 @@ to answer to work, so treat these as proposals, not decisions:
   911 or the front office for emergencies. That way it degrades safely when
   nobody is watching the queue.
 
-Moderation of anonymous feedback and case-management integration are untouched —
-both belong to features that aren't in this tier.
+The other two now have working defaults, also proposals rather than decisions:
+
+- **Moderating anonymous feedback** — staff-only. Guests never see raw
+  submissions; staff choose whether to publish a reply as "You said, we did".
+- **Case-management integration** — referrals are an internal queue whose shape
+  (kind, status, details, timestamps, guest code) is ready to be exported or
+  pushed to a case-management system. The integration itself depends on which
+  system the shelter uses, so it is not built.
 
 ## Hosting the web build
 
@@ -172,8 +188,10 @@ font as data URIs to make a single self-contained HTML file.
 ## Status
 
 TypeScript is clean (`npm run typecheck`) and the web export builds
-(`npm run export:web`). Every screen and both sign-in flows were driven in a
-headless browser with no console or page errors. The data layer is a local
+(`npm run export:web`). Every screen, including all the Fast follow and Phase 2
+features and both sign-in flows, was driven in a headless browser — 34 checks
+across the public app, guest app, staff console on desktop, and the phone nav —
+with no console or page errors. The data layer is a local
 stand-in — there is no server, no auth, and no push yet, and the staff PIN is
 checked on the device, so it protects nothing. It is a prototype to react to,
 not something to put in front of guests.

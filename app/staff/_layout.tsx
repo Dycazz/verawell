@@ -7,18 +7,36 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Springy, Badge } from '../../src/components';
 import { Text, useTheme, radius, space } from '../../src/theme';
 import { useSession } from '../../src/safety';
-import { useStaffInbox } from '../../src/data';
+import { useStaffInbox, useStaffCounts } from '../../src/data';
 
 /** Above this the console gets a desk layout; below it, a phone one. */
 const WIDE = 820;
 
-const NAV = [
-  { href: '/staff', label: 'Shift', icon: 'pulse' as const, iconOff: 'pulse-outline' as const },
-  { href: '/staff/inbox', label: 'Inbox', icon: 'mail' as const, iconOff: 'mail-outline' as const },
-  { href: '/staff/needs', label: 'Needs', icon: 'basket' as const, iconOff: 'basket-outline' as const },
-  { href: '/staff/schedule', label: 'Schedule', icon: 'calendar' as const, iconOff: 'calendar-outline' as const },
-  { href: '/staff/codes', label: 'Codes', icon: 'key' as const, iconOff: 'key-outline' as const },
+type Icon = keyof typeof Ionicons.glyphMap;
+interface NavItem {
+  href: string;
+  label: string;
+  icon: Icon;
+  iconOff: Icon;
+  /** On a phone only the primary items get a tab; the rest live under More. */
+  primary?: boolean;
+}
+
+const NAV: NavItem[] = [
+  { href: '/staff', label: 'Shift', icon: 'pulse', iconOff: 'pulse-outline', primary: true },
+  { href: '/staff/inbox', label: 'Inbox', icon: 'mail', iconOff: 'mail-outline', primary: true },
+  { href: '/staff/requests', label: 'Requests', icon: 'people', iconOff: 'people-outline' },
+  { href: '/staff/referrals', label: 'Referrals', icon: 'swap-horizontal', iconOff: 'swap-horizontal-outline' },
+  { href: '/staff/needs', label: 'Needs', icon: 'basket', iconOff: 'basket-outline', primary: true },
+  { href: '/staff/wishlist', label: 'Wishlist', icon: 'cart', iconOff: 'cart-outline' },
+  { href: '/staff/schedule', label: 'Schedule', icon: 'calendar', iconOff: 'calendar-outline', primary: true },
+  { href: '/staff/content', label: 'Content', icon: 'newspaper', iconOff: 'newspaper-outline' },
+  { href: '/staff/chores', label: 'Chores', icon: 'checkbox', iconOff: 'checkbox-outline' },
+  { href: '/staff/feedback', label: 'Feedback', icon: 'megaphone', iconOff: 'megaphone-outline' },
+  { href: '/staff/codes', label: 'Codes', icon: 'key', iconOff: 'key-outline' },
 ];
+
+const MORE: NavItem = { href: '/staff/more', label: 'More', icon: 'ellipsis-horizontal-circle', iconOff: 'ellipsis-horizontal-circle-outline' };
 
 export default function StaffLayout() {
   const { c } = useTheme();
@@ -27,17 +45,43 @@ export default function StaffLayout() {
   const pathname = usePathname();
   const { session, signOut } = useSession();
   const inbox = useStaffInbox();
+  const counts = useStaffCounts();
 
   if (!session || session.role !== 'staff') return <Redirect href="/staff-login" />;
 
   const wide = width >= WIDE;
   const pending = inbox.unreadThreads + inbox.openPublic;
 
-  const nav = NAV.map((item) => ({
+  const badgeFor = (href: string) =>
+    ({
+      '/staff/inbox': pending,
+      '/staff/requests': counts.requests,
+      '/staff/referrals': counts.referrals,
+      '/staff/feedback': counts.feedback,
+      '/staff/wishlist': counts.wishlist,
+    })[href];
+
+  const isActive = (href: string) =>
+    pathname === href || (href !== '/staff' && pathname.startsWith(href));
+
+  const withState = (item: NavItem) => ({
     ...item,
-    active: pathname === item.href || (item.href !== '/staff' && pathname.startsWith(item.href)),
-    badge: item.href === '/staff/inbox' && pending > 0 ? pending : undefined,
-  }));
+    active: isActive(item.href),
+    badge: badgeFor(item.href) || undefined,
+  });
+
+  // Desk layout shows everything; phone shows the primaries plus a More tab that
+  // is lit whenever the current page is one of the secondaries.
+  const nav = NAV.map(withState);
+  const secondary = NAV.filter((n) => !n.primary);
+  const phoneNav = [
+    ...NAV.filter((n) => n.primary).map(withState),
+    {
+      ...MORE,
+      active: pathname.startsWith('/staff/more') || secondary.some((n) => isActive(n.href)),
+      badge: secondary.reduce((n, i) => n + (badgeFor(i.href) ?? 0), 0) || undefined,
+    },
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
@@ -63,7 +107,7 @@ export default function StaffLayout() {
               {nav.map((item) => (
                 <Springy
                   key={item.href}
-                  onPress={() => router.replace(item.href)}
+                  onPress={() => router.replace(item.href as never)}
                   scaleTo={1}
                   accessibilityRole="button"
                   accessibilityState={{ selected: item.active }}
@@ -115,10 +159,10 @@ export default function StaffLayout() {
             { paddingBottom: insets.bottom || space.sm, backgroundColor: c.chrome, borderTopColor: c.separator },
           ]}
         >
-          {nav.map((item) => (
+          {phoneNav.map((item) => (
             <Springy
               key={item.href}
-              onPress={() => router.replace(item.href)}
+              onPress={() => router.replace(item.href as never)}
               scaleTo={1}
               accessibilityRole="button"
               accessibilityState={{ selected: item.active }}

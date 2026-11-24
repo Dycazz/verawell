@@ -329,5 +329,217 @@ export function createSeedState(): ShelterState {
         callNumber: '911',
       },
     ],
+
+    news: [
+      {
+        id: 'nw1',
+        title: 'Winter coat drive starts Saturday',
+        body: 'Drop off clean, zipped coats in any size at the front office, Saturday through the end of the month. Children’s sizes go fastest.',
+        pinned: true,
+        createdAt: ago(300),
+      },
+      {
+        id: 'nw2',
+        title: 'Thank you, Maple Street Church',
+        body: 'Forty-two grocery bags arrived this week. Every one of them went home with a family within a day.',
+        createdAt: ago(4300),
+      },
+      {
+        id: 'nw3',
+        title: 'New: legal clinic, first Tuesday of the month',
+        body: 'A volunteer attorney will hold free walk-in hours at the front office. Guests can book a slot through an advocate.',
+        createdAt: ago(9000),
+      },
+    ],
+
+    ways: [
+      {
+        id: 'w1',
+        title: 'Run a supply drive',
+        description: 'Collect from your workplace, school or congregation. We will send a one-page list of what is needed most.',
+        kind: 'drive',
+        when: 'Any time',
+      },
+      {
+        id: 'w2',
+        title: 'Drop off donations',
+        description: 'Bring items to the front office during business hours. Please call ahead; do not leave bags outside.',
+        kind: 'dropoff',
+        when: 'Mon–Fri, 9am–5pm',
+      },
+      {
+        id: 'w3',
+        title: 'Offer a skill',
+        description: 'Haircuts, résumé help, tutoring, bike repair, tax prep. If you can teach or fix it, we can probably use it.',
+        kind: 'skills',
+      },
+      {
+        id: 'w4',
+        title: 'Spring clean-up day',
+        description: 'Yard work, painting and deep cleaning of common rooms with the house crew.',
+        kind: 'event',
+        when: 'Second Saturday, 9am',
+      },
+    ],
+
+    amenities: [
+      {
+        id: 'am1',
+        name: 'Laundry room',
+        description: 'Two washers and two dryers. Detergent pods are on the shelf above.',
+        location: 'Basement, past the stairwell',
+        hours: '7am – 9pm',
+      },
+      {
+        id: 'am2',
+        name: 'Computer corner',
+        description: 'Three computers with printing, for job applications and benefits forms.',
+        location: 'Common room, east wall',
+        hours: '9am – 8pm',
+      },
+      {
+        id: 'am3',
+        name: 'Children’s play room',
+        description: 'Books, toys and a quiet corner. A grown-up needs to stay with children.',
+        location: 'First floor, next to the kitchen',
+        hours: '8am – 7pm',
+      },
+      {
+        id: 'am4',
+        name: 'Clothing closet',
+        description: 'Free clothing, coats and shoes. Take what you need.',
+        location: 'Second floor landing',
+        hours: 'Tue & Thu, 1pm – 4pm',
+      },
+      {
+        id: 'am5',
+        name: 'Quiet room',
+        description: 'No phones on speaker, no visitors, lights low. For rest, prayer or a breather.',
+        location: 'Second floor, end of the hall',
+      },
+    ],
+
+    places: [
+      {
+        id: 'pl1',
+        name: 'Route 12 bus',
+        kind: 'transit',
+        note: 'Runs every 15 minutes to downtown and the hospital. Bus passes are available from advocates.',
+        distance: '2 min walk',
+        address: 'Corner of Elm and 4th',
+      },
+      {
+        id: 'pl2',
+        name: 'Greenfield Market',
+        kind: 'grocery',
+        note: 'Accepts SNAP and WIC. Cheapest produce on this side of town.',
+        distance: '8 min walk',
+        address: '210 Elm Street',
+      },
+      {
+        id: 'pl3',
+        name: 'Riverside Community Clinic',
+        kind: 'clinic',
+        note: 'Sliding-scale fees. No insurance needed. Walk-ins before noon.',
+        distance: '15 min walk or bus 12',
+        address: '55 River Road',
+        phone: '+15550104500',
+      },
+      {
+        id: 'pl4',
+        name: 'Corner Pharmacy',
+        kind: 'pharmacy',
+        note: 'Will transfer prescriptions and fills most within the hour.',
+        distance: '6 min walk',
+        address: '18 Main Street',
+      },
+      {
+        id: 'pl5',
+        name: 'Central Library',
+        kind: 'library',
+        note: 'Free cards, free Wi-Fi, free printing for the first 20 pages a week.',
+        distance: 'Bus 12, 4 stops',
+        address: '1 Library Plaza',
+      },
+    ],
+
+    library: [
+      {
+        id: 'lb1',
+        title: 'Your rights while you stay here',
+        summary: 'What the shelter can and cannot ask of you.',
+        category: 'rights',
+        body: 'You can leave at any time. You can ask to see any rule in writing, and ask why it exists.\n\nStaff cannot go through your belongings without telling you why, and cannot share anything about you without your say-so, except where the law requires them to.\n\nIf you think a rule is being applied unfairly, tell an advocate or use the anonymous feedback form. Neither will count against you.',
+      },
+      {
+        id: 'lb2',
+        title: 'Finding permanent housing',
+        summary: 'The usual steps, and where an advocate can help.',
+        category: 'housing',
+        body: 'Start with a housing application packet. An advocate can help you gather ID, income proof and references.\n\nGet on every waitlist you qualify for; they move at different speeds, and being on several costs nothing.\n\nAsk about rapid rehousing, which can cover first month’s rent and a deposit.',
+      },
+      {
+        id: 'lb3',
+        title: 'Getting a replacement ID',
+        summary: 'Birth certificate, state ID and Social Security card, in the order that works.',
+        category: 'money',
+        body: 'Begin with the birth certificate; most other documents need it. Your birth state’s vital records office handles requests by mail or online.\n\nWith the birth certificate you can apply for a state ID. Ask an advocate about the fee waiver for people staying in shelter.\n\nThe Social Security card is last. Bring your ID and the form; the office is on Route 12.',
+      },
+      {
+        id: 'lb4',
+        title: 'Getting care without insurance',
+        summary: 'Clinics, free prescriptions and what to say at the desk.',
+        category: 'health',
+        body: 'Community clinics charge by what you can pay, and some charge nothing. Say “I do not have insurance” at the desk; they have a form for it.\n\nPharmacies often have a $4 generic list. Ask before you pay.\n\nIf you are pregnant or have children, you may qualify for coverage today. An advocate can help you apply.',
+      },
+      {
+        id: 'lb5',
+        title: 'Staying safe online',
+        summary: 'Phones, passwords and location sharing.',
+        category: 'safety',
+        body: 'Turn off location sharing in your phone settings, and in any app that offers it.\n\nChange passwords from a device the other person has never touched.\n\nIf you think a phone is being monitored, use a library computer for sensitive searches, and tell an advocate.',
+      },
+    ],
+
+    communityRequests: [],
+
+    chores: [
+      { id: 'ch1', title: 'Wipe kitchen counters and stove', area: 'Kitchen' },
+      { id: 'ch2', title: 'Sweep and mop the dining room', area: 'Kitchen' },
+      { id: 'ch3', title: 'Empty common-room trash', area: 'Common room' },
+      { id: 'ch4', title: 'Wipe down bathroom sinks', area: 'Bathrooms' },
+      { id: 'ch5', title: 'Fold and shelve laundry-room towels', area: 'Laundry', doneAt: ago(90) },
+    ],
+
+    feedback: [
+      {
+        id: 'fb1',
+        kind: 'idea',
+        body: 'Could the laundry room open earlier on weekends? A lot of us work early shifts.',
+        createdAt: ago(5000),
+        status: 'resolved',
+        publicReply: 'Laundry now opens at 7am every day, including weekends.',
+      },
+    ],
+
+    wishlist: [
+      {
+        id: 'wl1',
+        kind: 'grocery',
+        title: 'Rice and dried beans, large bags',
+        createdAt: ago(1500),
+        status: 'requested',
+      },
+      {
+        id: 'wl2',
+        kind: 'big-ticket',
+        title: 'A second microwave for the kitchen',
+        note: 'Queue at dinner is long.',
+        createdAt: ago(2600),
+        status: 'requested',
+      },
+    ],
+
+    referrals: [],
   };
 }

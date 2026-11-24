@@ -19,6 +19,23 @@ export default function House() {
 
   return (
     <Screen title="House" headerRight={<QuickExit />}>
+      <Group header="Around the house">
+        <Row icon="help-buoy" accent="tint" title="Help desk" subtitle="Non-urgent questions, no walk to the office." onPress={() => router.push('/guest/helpdesk')} />
+        <Row icon="checkbox" accent="positive" title="Chores" subtitle="Check off what you've done — no names." onPress={() => router.push('/guest/chores')} />
+        <Row icon="cart" accent="warn" title="Wishlist" subtitle="Groceries and bigger things we could use." onPress={() => router.push('/guest/wishlist')} />
+        <Row icon="cafe" accent="grey" title="Amenities" subtitle="What's here and where." onPress={() => router.push('/guest/amenities')} />
+      </Group>
+
+      <View style={{ marginTop: space['2xl'] }}>
+        <Group header="Help & information">
+          <Row icon="map" accent="positive" title="Neighbourhood guide" subtitle="Transit, groceries, clinics nearby." onPress={() => router.push('/guest/neighborhood')} />
+          <Row icon="library" accent="tint" title="Guides & resources" subtitle="Rights, housing, money, health." onPress={() => router.push('/guest/library')} />
+          <Row icon="swap-horizontal" accent="warn" title="Referral requests" subtitle="Legal, housing, financial help." onPress={() => router.push('/guest/referrals')} />
+          <Row icon="megaphone" accent="grey" title="Share feedback" subtitle="Anonymous — nothing is tied to you." onPress={() => router.push('/guest/feedback')} />
+        </Group>
+      </View>
+
+      <View style={{ marginTop: space['2xl'] }}>
       <Group header="Guest guidelines">
         {guidelines.map((g) => (
           <Guideline
@@ -29,6 +46,7 @@ export default function House() {
           />
         ))}
       </Group>
+      </View>
 
       <View style={{ marginTop: space['2xl'] }}>
         <Group

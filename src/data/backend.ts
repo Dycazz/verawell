@@ -3,7 +3,13 @@ import { createSeedState } from './seed';
 import type {
   AdvocateThread,
   CalendarEntry,
+  CommunityRequest,
+  ContentKey,
+  ContentMap,
+  Feedback,
   NeedItem,
+  ReferralRequest,
+  WishlistItem,
   PublicMessage,
   ShelterAlert,
   ShelterState,
@@ -35,7 +41,13 @@ export interface Backend {
   upsertEvent(entry: CalendarEntry): Promise<void>;
   removeEvent(id: string): Promise<void>;
 
-  openThread(guestCode: string, topic: string, body: string, urgent: boolean): Promise<string>;
+  openThread(
+    guestCode: string,
+    topic: string,
+    body: string,
+    urgent: boolean,
+    channel?: 'advocate' | 'helpdesk',
+  ): Promise<string>;
   replyToThread(id: string, from: 'guest' | 'advocate', body: string): Promise<void>;
   markThreadRead(id: string, as: 'guest' | 'staff'): Promise<void>;
 
@@ -45,6 +57,32 @@ export interface Backend {
   issueGuestCode(label: string): Promise<string>;
   setCodeActive(code: string, active: boolean): Promise<void>;
   verifyGuestCode(code: string): Promise<boolean>;
+
+  upsertContent<K extends ContentKey>(key: K, item: ContentMap[K]): Promise<void>;
+  removeContent(key: ContentKey, id: string): Promise<void>;
+
+  submitCommunityRequest(
+    req: Omit<CommunityRequest, 'id' | 'createdAt' | 'handled'>,
+  ): Promise<void>;
+  setCommunityRequestHandled(id: string, handled: boolean): Promise<void>;
+
+  upsertChore(chore: { id: string; title: string; area: string }): Promise<void>;
+  removeChore(id: string): Promise<void>;
+  toggleChore(id: string): Promise<void>;
+  resetChores(): Promise<void>;
+
+  submitFeedback(kind: Feedback['kind'], body: string): Promise<void>;
+  updateFeedback(id: string, patch: Partial<Pick<Feedback, 'status' | 'publicReply'>>): Promise<void>;
+
+  requestWish(kind: WishlistItem['kind'], title: string, note?: string): Promise<void>;
+  /** Approving publishes the item to Current Needs; fulfilling marks it stocked. */
+  setWishStatus(id: string, status: WishlistItem['status']): Promise<void>;
+
+  requestReferral(guestCode: string, kind: ReferralRequest['kind'], details: string): Promise<void>;
+  updateReferral(
+    id: string,
+    patch: Partial<Pick<ReferralRequest, 'status' | 'staffNote'>>,
+  ): Promise<void>;
 
   /** Demo affordance: puts the prototype back to its seeded state. */
   reset(): Promise<void>;
@@ -160,13 +198,20 @@ export class LocalBackend implements Backend {
     await this.commit((s) => ({ ...s, calendar: s.calendar.filter((e) => e.id !== entryId) }));
   }
 
-  async openThread(guestCode: string, topic: string, body: string, urgent: boolean) {
+  async openThread(
+    guestCode: string,
+    topic: string,
+    body: string,
+    urgent: boolean,
+    channel: 'advocate' | 'helpdesk' = 'advocate',
+  ) {
     const threadId = id('t');
     await this.commit((s) => ({
       ...s,
       threads: [
         {
           id: threadId,
+          channel,
           guestCode,
           topic,
           urgent,
@@ -241,6 +286,131 @@ export class LocalBackend implements Backend {
     await this.loaded;
     const normalized = code.trim().toUpperCase();
     return this.state.codes.some((g) => g.active && g.code === normalized);
+  }
+
+  async upsertContent<K extends ContentKey>(key: K, item: ContentMap[K]) {
+    await this.commit((s) => {
+      const list = s[key] as ContentMap[K][];
+      const exists = list.some((x) => x.id === item.id);
+      const next = exists ? list.map((x) => (x.id === item.id ? item : x)) : [item, ...list];
+      return { ...s, [key]: next };
+    });
+  }
+
+  async removeContent(key: ContentKey, itemId: string) {
+    await this.commit((s) => ({ ...s, [key]: (s[key] as { id: string }[]).filter((x) => x.id !== itemId) }));
+  }
+
+  async submitCommunityRequest(req: Omit<CommunityRequest, 'id' | 'createdAt' | 'handled'>) {
+    await this.commit((s) => ({
+      ...s,
+      communityRequests: [{ ...req, id: id('r'), createdAt: Date.now(), handled: false }, ...s.communityRequests],
+    }));
+  }
+
+  async setCommunityRequestHandled(reqId: string, handled: boolean) {
+    await this.commit((s) => ({
+      ...s,
+      communityRequests: s.communityRequests.map((r) => (r.id === reqId ? { ...r, handled } : r)),
+    }));
+  }
+
+  async upsertChore(chore: { id: string; title: string; area: string }) {
+    await this.commit((s) => {
+      const exists = s.chores.some((c) => c.id === chore.id);
+      return {
+        ...s,
+        chores: exists
+          ? s.chores.map((c) => (c.id === chore.id ? { ...c, ...chore } : c))
+          : [...s.chores, chore],
+      };
+    });
+  }
+
+  async removeChore(choreId: string) {
+    await this.commit((s) => ({ ...s, chores: s.chores.filter((c) => c.id !== choreId) }));
+  }
+
+  async toggleChore(choreId: string) {
+    await this.commit((s) => ({
+      ...s,
+      chores: s.chores.map((c) =>
+        c.id !== choreId ? c : { ...c, doneAt: c.doneAt ? undefined : Date.now() },
+      ),
+    }));
+  }
+
+  async resetChores() {
+    await this.commit((s) => ({ ...s, chores: s.chores.map(({ doneAt: _done, ...c }) => c) }));
+  }
+
+  async submitFeedback(kind: Feedback['kind'], body: string) {
+    await this.commit((s) => ({
+      ...s,
+      feedback: [{ id: id('f'), kind, body, createdAt: Date.now(), status: 'new' }, ...s.feedback],
+    }));
+  }
+
+  async updateFeedback(fbId: string, patch: Partial<Pick<Feedback, 'status' | 'publicReply'>>) {
+    await this.commit((s) => ({
+      ...s,
+      feedback: s.feedback.map((f) => (f.id === fbId ? { ...f, ...patch } : f)),
+    }));
+  }
+
+  async requestWish(kind: WishlistItem['kind'], title: string, note?: string) {
+    await this.commit((s) => ({
+      ...s,
+      wishlist: [{ id: id('w'), kind, title, note, createdAt: Date.now(), status: 'requested' }, ...s.wishlist],
+    }));
+  }
+
+  async setWishStatus(wishId: string, status: WishlistItem['status']) {
+    await this.commit((s) => {
+      const wish = s.wishlist.find((w) => w.id === wishId);
+      if (!wish) return s;
+      // The wishlist and Current Needs are one list seen from two sides: an
+      // approved wish is a public need, a fulfilled one is marked stocked, and
+      // a declined one is withdrawn.
+      const needId = `need-${wish.id}`;
+      let needs = s.needs.filter((n) => n.id !== needId);
+      if (status === 'approved' || status === 'fulfilled') {
+        needs = [
+          {
+            id: needId,
+            title: wish.title,
+            note: wish.note,
+            urgency: status === 'approved' ? 'urgent' : 'stocked',
+            category: wish.kind === 'grocery' ? 'food' : 'household',
+            updatedAt: Date.now(),
+          },
+          ...needs,
+        ];
+      }
+      return {
+        ...s,
+        needs,
+        wishlist: s.wishlist.map((w) => (w.id === wishId ? { ...w, status } : w)),
+      };
+    });
+  }
+
+  async requestReferral(guestCode: string, kind: ReferralRequest['kind'], details: string) {
+    const now = Date.now();
+    await this.commit((s) => ({
+      ...s,
+      referrals: [
+        { id: id('rf'), guestCode, kind, details, createdAt: now, updatedAt: now, status: 'new' },
+        ...s.referrals,
+      ],
+    }));
+  }
+
+  async updateReferral(refId: string, patch: Partial<Pick<ReferralRequest, 'status' | 'staffNote'>>) {
+    await this.commit((s) => ({
+      ...s,
+      referrals: s.referrals.map((r) => (r.id === refId ? { ...r, ...patch, updatedAt: Date.now() } : r)),
+    }));
   }
 
   async reset() {

@@ -20,7 +20,12 @@ export default function GuestLayout() {
     return <Redirect href="/guest-login" />;
   }
 
-  const unread = threads.reduce((n, t) => n + t.unreadForGuest, 0);
+  const unreadFor = (channel: 'advocate' | 'helpdesk') =>
+    threads
+      .filter((t) => (t.channel ?? 'advocate') === channel)
+      .reduce((n, t) => n + t.unreadForGuest, 0);
+  const unread = unreadFor('advocate');
+  const helpdeskUnread = unreadFor('helpdesk');
 
   const tab = (name: string, title: string, on: keyof typeof Ionicons.glyphMap, off: keyof typeof Ionicons.glyphMap, badge?: number) => (
     <Tabs.Screen
@@ -55,7 +60,17 @@ export default function GuestLayout() {
       {tab('safety', 'Safety', 'shield-checkmark', 'shield-outline')}
       {tab('schedule', 'Schedule', 'calendar', 'calendar-outline')}
       {tab('advocate', 'Advocate', 'chatbubble', 'chatbubble-outline', unread > 0 ? unread : undefined)}
-      {tab('house', 'House', 'book', 'book-outline')}
+      {tab('house', 'House', 'book', 'book-outline', helpdeskUnread > 0 ? helpdeskUnread : undefined)}
+
+      {/* Reached from the House tab so the bar stays at five. */}
+      <Tabs.Screen name="helpdesk" options={{ href: null }} />
+      <Tabs.Screen name="chores" options={{ href: null }} />
+      <Tabs.Screen name="amenities" options={{ href: null }} />
+      <Tabs.Screen name="neighborhood" options={{ href: null }} />
+      <Tabs.Screen name="library" options={{ href: null }} />
+      <Tabs.Screen name="feedback" options={{ href: null }} />
+      <Tabs.Screen name="wishlist" options={{ href: null }} />
+      <Tabs.Screen name="referrals" options={{ href: null }} />
     </Tabs>
   );
 }

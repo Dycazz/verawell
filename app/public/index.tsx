@@ -52,6 +52,32 @@ export default function PublicHome() {
 
       <View style={{ height: space['2xl'] }} />
 
+      <Group header="Get involved">
+        <Row
+          icon="hand-left"
+          accent="positive"
+          title="Volunteer"
+          subtitle="Sign up and we’ll match you with a coordinator."
+          onPress={() => router.push('/public/volunteer')}
+        />
+        <Row
+          icon="bulb"
+          accent="warn"
+          title="Ways to help"
+          subtitle="Drives, drop-offs and skills — beyond money."
+          onPress={() => router.push('/public/ways')}
+        />
+        <Row
+          icon="school"
+          accent="tint"
+          title="Request a training"
+          subtitle="For organisations and individuals."
+          onPress={() => router.push('/public/training')}
+        />
+      </Group>
+
+      <View style={{ height: space['2xl'] }} />
+
       <Group header="Follow along" footer="We never post anything that identifies a guest.">
         <Row icon="globe" accent="grey" title="Website" value="Opens browser" onPress={() => openUrl(profile.website)} />
         {profile.socials.map((s) => (

@@ -115,3 +115,26 @@ export function useStaffInbox() {
 
 const lastAt = (t: { messages: { createdAt: number }[]; createdAt: number }) =>
   t.messages.at(-1)?.createdAt ?? t.createdAt;
+
+/** Pinned posts first, then newest. */
+export function useNews() {
+  const { news } = useShelter();
+  return useMemo(
+    () => [...news].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.createdAt - a.createdAt),
+    [news],
+  );
+}
+
+/** Counts for the console's nav badges, so "what needs me" is visible from any page. */
+export function useStaffCounts() {
+  const { communityRequests, referrals, feedback, wishlist } = useShelter();
+  return useMemo(
+    () => ({
+      requests: communityRequests.filter((r) => !r.handled).length,
+      referrals: referrals.filter((r) => r.status === 'new').length,
+      feedback: feedback.filter((f) => f.status === 'new').length,
+      wishlist: wishlist.filter((w) => w.status === 'requested').length,
+    }),
+    [communityRequests, referrals, feedback, wishlist],
+  );
+}

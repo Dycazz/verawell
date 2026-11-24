@@ -40,10 +40,10 @@ export default function StaffInbox() {
                   <Row
                     key={t.id}
                     title={t.guestCode}
-                    subtitle={`${t.topic} · ${latest?.from === 'advocate' ? 'You: ' : ''}${latest?.body ?? ''}`}
+                    subtitle={`${t.channel === 'helpdesk' ? 'Help desk · ' : ''}${t.topic} · ${latest?.from === 'advocate' ? 'You: ' : ''}${latest?.body ?? ''}`}
                     value={relativeTime(latest?.createdAt ?? t.createdAt)}
                     onPress={() => router.push(`/staff-thread/${t.id}`)}
-                    icon={t.urgent ? 'alert-circle' : 'person'}
+                    icon={t.urgent ? 'alert-circle' : t.channel === 'helpdesk' ? 'help-buoy' : 'person'}
                     accent={t.urgent ? 'crisis' : 'grey'}
                     right={t.unreadForStaff > 0 ? <Badge label="New" tone="crisis" /> : undefined}
                   />

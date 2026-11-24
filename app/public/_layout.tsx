@@ -44,6 +44,15 @@ export default function PublicLayout() {
           }}
         />
         <Tabs.Screen
+          name="news"
+          options={{
+            title: 'News',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'newspaper' : 'newspaper-outline'} size={25} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="needs"
           options={{
             title: 'Needs',
@@ -70,6 +79,10 @@ export default function PublicLayout() {
             ),
           }}
         />
+        {/* Reached from the Help tab, not the tab bar, so the bar stays at five. */}
+        <Tabs.Screen name="volunteer" options={{ href: null }} />
+        <Tabs.Screen name="ways" options={{ href: null }} />
+        <Tabs.Screen name="training" options={{ href: null }} />
       </Tabs>
 
       {/* "Always on screen" taken literally: the dock belongs to the navigator,

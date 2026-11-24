@@ -11,3 +11,5 @@ export { Springy } from './Pressable';
 export { CrisisBar, CRISIS_DOCK_HEIGHT } from './Crisis';
 export { Conversation } from './Conversation';
 export { Segmented } from './Segmented';
+export { ContentEditor } from './ContentEditor';
+export type { FieldDef } from './ContentEditor';
